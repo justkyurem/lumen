@@ -30,6 +30,7 @@ const DEFAULTS = {
   dockShowUnpinned: true,
   dockPreviews: true,
   dockShowTrash: true,
+  dockShowLaunchpad: true,
   apps: [],
 
   // Barra dei menu
@@ -98,6 +99,8 @@ const DEFAULTS = {
   missionShortcut: 'Alt+W',
   quickLookShortcut: 'Alt+Q',
   pickerShortcut: 'Ctrl+Alt+P',
+  launchpadShortcut: 'Alt+A',
+  launchpadHidden: [],
   showDesktops: true,
   desktopWallpapers: {},
   colors: [],
@@ -175,7 +178,7 @@ function mergeNested(base, over) {
 }
 
 // Chiavi che compongono un "tema" esportabile
-const THEME_KEYS = ['theme', 'accent', 'skin', 'dockSize', 'dockMagnify', 'dockMagnifyScale', 'dockAutoHide', 'dockShowTrash',
+const THEME_KEYS = ['theme', 'accent', 'skin', 'dockSize', 'dockMagnify', 'dockMagnifyScale', 'dockAutoHide', 'dockShowTrash', 'dockShowLaunchpad',
   'showMenubar', 'menubarShowActiveApp', 'menubarLabel', 'clock24', 'showSeconds', 'showDate', 'showBattery', 'menubarShowStats',
   'widgetsEnabled', 'widgets', 'wallpaperMode', 'wallpaper', 'dynamicWallpapers'];
 

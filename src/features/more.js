@@ -326,6 +326,7 @@ exports.install = (c) => {
   const EXTRA_CMDS = [
     { id: 'disk', glyph: 'cpu', run: () => hooks.disk && hooks.disk() },
     { id: 'mission', glyph: 'grid', run: () => setTimeout(mission, 150) },
+    { id: 'launchpad', glyph: 'apps', run: () => setTimeout(() => hooks.launchpad && hooks.launchpad(), 150) },
     { id: 'panel', glyph: 'bell', run: () => setTimeout(panel, 150) },
     { id: 'picker', glyph: 'contrast', run: () => setTimeout(picker, 300) },
     { id: 'newDesktop', glyph: 'desktop', run: () => fast.safe('newDesktop') },

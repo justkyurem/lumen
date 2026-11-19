@@ -497,6 +497,20 @@ Object.assign(D.en, {
   'disk.trashQ': 'Move {n} files to the Recycle Bin ({s})?', 'disk.trashDetail': 'You can recover them from the Recycle Bin until you empty it.',
 });
 
+// ---------- Launchpad ----------
+Object.assign(D.it, {
+  'lp.search': 'Cerca', 'lp.loading': 'Carico le app…', 'lp.none': 'Nessuna app trovata', 'lp.open': 'Apri',
+  'lp.hide': 'Nascondi dal Launchpad', 'lp.unhide': 'Mostra le app nascoste ({n})',
+  's.lpHint': 'Tutte le app installate a schermo intero',
+  'corner.launchpad': 'Launchpad', 'cmd.launchpad': 'Launchpad', 'cmdk.launchpad': 'launchpad,tutte le app,app installate,applicazioni',
+});
+Object.assign(D.en, {
+  'lp.search': 'Search', 'lp.loading': 'Loading apps…', 'lp.none': 'No apps found', 'lp.open': 'Open',
+  'lp.hide': 'Hide from Launchpad', 'lp.unhide': 'Show hidden apps ({n})',
+  's.lpHint': 'All installed apps, full screen',
+  'corner.launchpad': 'Launchpad', 'cmd.launchpad': 'Launchpad', 'cmdk.launchpad': 'launchpad,all apps,installed apps,applications',
+});
+
 function dict(lang) { return D[lang] || D.it; }
 function t(lang, key, vars) {
   let s = dict(lang)[key];

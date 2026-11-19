@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'">
+<link rel="stylesheet" href="base.css">
+<style>
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { background: rgba(10, 10, 16, .55); backdrop-filter: blur(2px); display: flex; flex-direction: column; animation: zoom .2s cubic-bezier(.2,.8,.2,1); }
+  html[data-skin="demoniaccio"] body { background: radial-gradient(ellipse at center, rgba(110, 8, 26, .45), rgba(6, 3, 5, .82)); }
+  @keyframes zoom { from { opacity: 0; transform: scale(1.06); } }
+  .search { align-self: center; margin: 46px 0 10px; width: 260px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.14); border-radius: 9px; padding: 6px 11px; color: #fff; }
+  .search .ico { width: 15px; height: 15px; opacity: .7; }
+  .search input { all: unset; flex: 1; font-size: 13.5px; color: #fff; }
+  .search input::placeholder { color: rgba(255,255,255,.55); }
+  #viewport { flex: 1; overflow: hidden; position: relative; }
+  #pages { display: flex; height: 100%; transition: transform .38s cubic-bezier(.2,.8,.2,1); }
+  .page { flex: none; width: 100vw; height: 100%; display: grid; align-content: center; justify-content: center; padding: 10px 6vw 20px; }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 9px; padding: 10px 4px; border-radius: 16px; cursor: default; animation: pop .26s cubic-bezier(.2,.8,.2,1) both; }
+  .app .ic { width: var(--ic); height: var(--ic); display: flex; align-items: center; justify-content: center; transition: transform .14s; }
+  .app .ic img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 14px rgba(0,0,0,.35)); }
+  .app .ic .letter { width: 100%; height: 100%; border-radius: 22%; background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 80%, #fff), var(--accent)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: calc(var(--ic) * .42); font-weight: 600; box-shadow: 0 6px 14px rgba(0,0,0,.35); }
+  .app span { color: #fff; font-size: 12.5px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  .app:hover .ic { transform: scale(1.06); }
+  .app:active .ic { transform: scale(.94); filter: brightness(.8); }
+  .app.sel { background: rgba(255,255,255,.14); }
+  .dots { display: flex; justify-content: center; gap: 9px; padding: 0 0 34px; min-height: 42px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.35); transition: background .2s, transform .2s; }
+  .dot.on { background: #fff; transform: scale(1.15); }
+  .empty { color: rgba(255,255,255,.7); font-size: 15px; text-align: center; }
+  .loading { color: rgba(255,255,255,.6); font-size: 14px; text-align: center; margin-top: 30vh; }
+</style>
+</head>
+<body>
+<div class="search"><span class="ico" id="sico"></span><input id="q" data-i18n-ph="lp.search" spellcheck="false"></div>
+<div id="viewport"><div id="pages"><div class="loading" data-i18n="lp.loading"></div></div></div>
+<div class="dots" id="dots"></div>
+<script src="icons.js"></script>
+<script src="common.js"></script>
+<script src="launchpad.js"></script>
+</body>
+</html>

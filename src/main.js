@@ -72,6 +72,7 @@ function dockItemCount() {
   let n = S.apps.length + 1; // + Personalizza
   if (eff().dockShowUnpinned) n += state.unpinned.length;
   if (S.dockShowTrash) n += 1;
+  if (S.dockShowLaunchpad) n += 1;
   return Math.max(n, 3);
 }
 // Spazio riservato in basso per il dock (DIP): l'area di lavoro lo esclude già, quindi lo riaggiungiamo per posizionare il dock
@@ -157,7 +158,7 @@ function releaseAppBar(w) { if (alive(w)) return fast.safe('appBarRemove', { hwn
 
 // ---------- Finestre a comparsa (create al primo uso, poi riusate) ----------
 // Le finestre usate di rado vengono distrutte dopo un po' che sono nascoste, per liberare memoria.
-const RECYCLE = new Set(['clip', 'control', 'popover', 'mission', 'panel', 'ql']);
+const RECYCLE = new Set(['clip', 'control', 'popover', 'mission', 'panel', 'ql', 'launchpad']);
 function lazy(key, file, opts, setup) {
   if (alive(W[key])) { clearTimeout(W[key]._recycle); return W[key]; }
   const w = new BrowserWindow(overlay(opts));
@@ -303,7 +304,7 @@ function patch(p) {
   if ('clipboardEnabled' in p) S.clipboardEnabled ? clips.start() : clips.stop();
   if ('weatherCity' in p && p.weatherCity !== prev.weatherCity) { state.weather = null; refreshWeather(); }
   if ('lang' in p) { buildTray(); }
-  if (['missionShortcut', 'quickLookShortcut', 'pickerShortcut'].some(k => k in p)) registerShortcuts();
+  if (['missionShortcut', 'quickLookShortcut', 'pickerShortcut', 'launchpadShortcut'].some(k => k in p)) registerShortcuts();
   for (const f of hooks.onPatch) { try { f(p); } catch {} }
   relayout();
   broadcast();
@@ -436,6 +437,7 @@ const CORNER_ACTIONS = {
   clipboard: () => toggleClipboard(),
   settings: () => openSettings(),
   mission: () => hooks.mission && hooks.mission(),
+  launchpad: () => hooks.launchpad && hooks.launchpad(),
   panel: () => hooks.panel && hooks.panel(),
 };
 const corner = { at: null, since: 0, fired: false };
@@ -731,6 +733,7 @@ on('bar-mouse', (inside, e) => { const w = BrowserWindow.fromWebContents(e.sende
 on('dock-mouse', (inside) => { if (alive(W.dock)) W.dock.setIgnoreMouseEvents(!inside, { forward: true }); });
 on('dock-click', async (kind, key, rect, e) => {
   if (kind === 'lumen') return openSettings();
+  if (kind === 'launchpad') return hooks.launchpad && hooks.launchpad();
   if (kind === 'trash') return execFile('explorer.exe', ['shell:RecycleBinFolder']);
   if (kind === 'unpinned') { hidePopover(); return activateExe(key); }
   const a = S.apps.find(x => x.id === key);
@@ -776,7 +779,7 @@ on('dock-context', (kind, key, e) => {
 let previewTimer = null, popHover = false;
 on('dock-hover', (kind, key, rect, e) => {
   clearTimeout(previewTimer);
-  if (!eff().dockPreviews || !kind || kind === 'lumen' || kind === 'trash') {
+  if (!eff().dockPreviews || !kind || kind === 'lumen' || kind === 'trash' || kind === 'launchpad') {
     if (state.popoverMode === 'previews') previewTimer = setTimeout(() => { if (!popHover) hidePopover(); }, 250);
     return;
   }
@@ -1201,13 +1204,14 @@ app.whenReady().then(async () => {
   // Modalità di verifica: LUMEN_SNAP=<cartella> apre tutto, salva gli screenshot ed esce
   // Funzioni aggiuntive (Mission Control, pannello laterale, profili, OBS, Quick Look, strumenti…)
   require('./features/more').install(ctx());
+  require('./features/launchpad').install(ctx());
   registerShortcuts();
 
   if (process.env.LUMEN_SNAP) runSnapshots(process.env.LUMEN_SNAP);
 });
 
 // Punti di aggancio per i moduli aggiuntivi
-const hooks = { shortcuts: [], search: [], run: {}, onPatch: [], mission: null, panel: null };
+const hooks = { shortcuts: [], search: [], run: {}, onPatch: [], mission: null, panel: null, launchpad: null };
 function ctx() {
   return {
     get S() { return S; }, patch, store, fast, slow, W, state, hooks, apps, t, send, sendBars, alive, overlay, lazy, centerOn,
@@ -1231,6 +1235,19 @@ async function runSnapshots(dir) {
     const tot = Math.round(m.reduce((s, p) => s + (p.memory.privateBytes || p.memory.workingSetSize), 0) / 1024);
     fs.appendFileSync(path.join(dir, 'memory.txt'), `== ${label}: ${tot} MB (privata)\n${rows.join('\n')}\n`);
   };
+  if (process.env.LUMEN_SNAP_ONLY === 'launchpad') {
+    await fast.ready; await wait(3000);
+    const t0 = Date.now();
+    await hooks.launchpad();
+    log('launchpad aperto in ' + (Date.now() - t0) + ' ms, app=' + apps.items.length);
+    for (const ms of [1000, 3000, 8000, 16000]) { await wait({1000: 1000, 3000: 2000, 8000: 5000, 16000: 8000}[ms]); log(ms + 'ms icone ricevute=' + await W.launchpad.webContents.executeJavaScript('Object.keys(icons).length')); }
+    log('tessere=' + await W.launchpad.webContents.executeJavaScript("document.querySelectorAll('.app').length + ' icone=' + document.querySelectorAll('.app img').length + ' pagine=' + document.querySelectorAll('.page').length"));
+    await snap('launchpad', W.launchpad);
+    await W.launchpad.webContents.executeJavaScript("(() => { const q = document.getElementById('q'); q.value = 'note'; q.dispatchEvent(new Event('input')); })()");
+    await wait(400); await snap('launchpad-search', W.launchpad);
+    W.launchpad.hide(); await snap('dock', W.dock);
+    return app.quit();
+  }
   if (process.env.LUMEN_SNAP_ONLY === 'fix') {
     await fast.ready; await wait(4500);
     log('area di lavoro con Lumen: ' + JSON.stringify(primary().workArea) + ' dockReservedH=' + dockReservedH + ' dock=' + JSON.stringify(W.dock.getBounds()));

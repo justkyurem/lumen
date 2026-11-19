@@ -27,6 +27,7 @@ function render() {
       </div>`).join('');
   }
   html += '<div class="sep"></div>';
+  if (S.dockShowLaunchpad) html += `<div class="item" data-kind="launchpad"><div class="tile">${App.icon('apps')}</div><span class="label">Launchpad</span></div>`;
   html += `<div class="item" data-kind="lumen"><div class="tile">${App.icon('grid')}</div><span class="label">${esc(t('dock.customize'))}</span></div>`;
   if (S.dockShowTrash) {
     html += `<div class="item" data-kind="trash"><div class="tile">${App.icon(dstate.recycle ? 'trashFull' : 'trash')}</div>

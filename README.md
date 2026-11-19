@@ -18,6 +18,7 @@ Al primo avvio Windows SmartScreen può mostrare un avviso perché l'app non è 
 | **Dock** | Ingrandimento, cartelle a ventaglio, cestino, app aperte, anteprime delle finestre |
 | **Barra dei menu** | App attiva, desktop virtuali, timer Pomodoro, CPU/RAM, batteria, orologio |
 | **Ricerca rapida** (Alt+Spazio) | App, file, calcoli, unità e valute, comandi, snippet, preferiti e cronologia del browser |
+| **Launchpad** (Alt+A) | Tutte le app installate a schermo intero, con ricerca e pagine |
 | **Mission Control** (Alt+W) | Tutte le finestre affiancate, desktop virtuali |
 | **Quick Look** (Alt+Q) | Anteprima del file selezionato in Esplora file: immagini, video, PDF, testo |
 | **Centro di controllo** | Volume, luminosità, Wi-Fi, Bluetooth, tema scuro, Non disturbare, musica, profili, OBS |

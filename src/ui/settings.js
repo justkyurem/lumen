@@ -17,7 +17,7 @@ const PRESETS = [
   { id: 'graphite', theme: 'dark', accent: '#8e8e93', dockSize: 46, dockMagnify: false, bg: '#2a2a2d', bar: '#38383c', dock: '#45454acc' },
   { id: 'ocean', theme: 'auto', accent: '#64d2ff', dockSize: 56, dockMagnify: true, bg: 'linear-gradient(135deg,#0b3d91,#1fa2ff)', bar: '#ffffff55', dock: '#ffffff66' },
 ];
-const CORNER_OPTS = ['none', 'launcher', 'control', 'mission', 'panel', 'desktop', 'lock', 'widgets', 'clipboard', 'settings'];
+const CORNER_OPTS = ['none', 'launcher', 'control', 'mission', 'launchpad', 'panel', 'desktop', 'lock', 'widgets', 'clipboard', 'settings'];
 const SNAP = [
   ['left', 'Ctrl+Alt+←'], ['right', 'Ctrl+Alt+→'], ['top', 'Ctrl+Alt+↑'], ['bottom', 'Ctrl+Alt+↓'], ['max', 'Ctrl+Alt+Enter'], ['almost', 'Ctrl+Alt+M'], ['center', 'Ctrl+Alt+C'],
   ['tl', 'Ctrl+Alt+U'], ['tr', 'Ctrl+Alt+I'], ['bl', 'Ctrl+Alt+J'], ['br', 'Ctrl+Alt+K'], ['left3', 'Ctrl+Alt+D'], ['center3', 'Ctrl+Alt+F'], ['right3', 'Ctrl+Alt+G'],

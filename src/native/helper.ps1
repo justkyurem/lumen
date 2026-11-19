@@ -291,6 +291,54 @@ namespace Lumen {
 '@
 Add-Type -TypeDefinition $cs -Language CSharp
 
+# ---------- Icone delle app (anche quelle dello Store), compilate solo quando servono ----------
+$iconCs = @'
+using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Runtime.InteropServices;
+namespace LumenIcons {
+  [ComImport, Guid("bcc18b79-ba16-442f-80c4-8a59c30c463b"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface IShellItemImageFactory { [PreserveSig] int GetImage(SIZE size, int flags, out IntPtr phbm); }
+  [StructLayout(LayoutKind.Sequential)] struct SIZE { public int cx, cy; }
+  [StructLayout(LayoutKind.Sequential)] struct BITMAP { public int bmType, bmWidth, bmHeight, bmWidthBytes; public ushort bmPlanes, bmBitsPixel; public IntPtr bmBits; }
+  public static class Icons {
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = false)]
+    static extern void SHCreateItemFromParsingName(string path, IntPtr pbc, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, [MarshalAs(UnmanagedType.Interface)] out IShellItemImageFactory f);
+    [DllImport("gdi32.dll")] static extern int GetObject(IntPtr h, int c, ref BITMAP b);
+    [DllImport("gdi32.dll")] static extern bool DeleteObject(IntPtr h);
+    public static string Get(string parsing, int size) {
+      IShellItemImageFactory f = null; IntPtr hbm = IntPtr.Zero;
+      try {
+        SHCreateItemFromParsingName(parsing, IntPtr.Zero, typeof(IShellItemImageFactory).GUID, out f);
+        SIZE s; s.cx = size; s.cy = size;
+        if (f.GetImage(s, 0x1 | 0x4, out hbm) != 0 || hbm == IntPtr.Zero) return null; // BIGGERSIZEOK | ICONONLY
+        BITMAP b = new BITMAP();
+        GetObject(hbm, Marshal.SizeOf(typeof(BITMAP)), ref b);
+        Bitmap outBmp;
+        if (b.bmBits != IntPtr.Zero && b.bmBitsPixel == 32) {
+          using (var src = new Bitmap(b.bmWidth, b.bmHeight, b.bmWidthBytes, PixelFormat.Format32bppPArgb, b.bmBits)) {
+            outBmp = new Bitmap(src);
+          }
+          outBmp.RotateFlip(RotateFlipType.RotateNoneFlipY); // le DIB sono capovolte
+        } else outBmp = Image.FromHbitmap(hbm);
+        using (outBmp) using (var ms = new MemoryStream()) { outBmp.Save(ms, ImageFormat.Png); return "data:image/png;base64," + Convert.ToBase64String(ms.ToArray()); }
+      } finally {
+        if (hbm != IntPtr.Zero) DeleteObject(hbm);
+        if (f != null) Marshal.ReleaseComObject(f);
+      }
+    }
+  }
+}
+'@
+function Get-AppIcons($ids, [int]$size) {
+  if (-not ('LumenIcons.Icons' -as [type])) { Add-Type -TypeDefinition $iconCs -ReferencedAssemblies System.Drawing }
+  $o = @{}
+  foreach ($id in $ids) { try { $r = [LumenIcons.Icons]::Get("shell:AppsFolder\$id", $size); if ($r) { $o[$id] = $r } } catch {} }
+  $o
+}
+
 # ---------- WinRT (caricato solo quando serve) ----------
 $script:winrt = $false
 function Init-WinRT {
@@ -589,6 +637,7 @@ function Handle($cmd, $a) {
     'appBarBottom'{ , @([Lumen.Native]::AppBarBottom([long]$a.hwnd, $a.l, $a.t, $a.r, $a.b)) }
     'appBarRemove'{ foreach ($h in $a.hwnds) { [Lumen.Native]::AppBarRemove([long]$h) }; $true }
     'sleep'       { [Lumen.Native]::Sleep(); $true }
+    'appIcons'    { Get-AppIcons $a.ids ([int]$a.size) }
     'startApps'   { , @(Get-StartApps | ForEach-Object { @{ name = $_.Name; id = $_.AppID } }) }
     'searchFiles' { Search-Files $a.q ([int]$a.n) }
     'perf'        { Get-Perf }
