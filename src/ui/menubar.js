@@ -84,11 +84,32 @@ window.lumen.on('pomo', (p) => { pomo = p; renderPomo(); });
 window.lumen.on('pomo-ding', () => { const c = $('clock'); c.classList.add('ding'); setTimeout(() => c.classList.remove('ding'), 1600); });
 window.lumen.on('stats', renderStats);
 
+// Barra a scomparsa: nascosta finché il mouse non tocca il bordo in alto
+let barShown = true, barHideT = null;
+function setBarShown(v) {
+  barShown = v;
+  $('bar').style.transform = v ? '' : 'translateY(-100%)';
+  window.lumen.barMouse(v);
+}
+$('bar').style.transition = 'transform .22s cubic-bezier(.2,.8,.2,1)';
+document.addEventListener('mousemove', (e) => {
+  if (!S.menubarAutoHide) return;
+  clearTimeout(barHideT);
+  if (!barShown && e.clientY <= 2) setBarShown(true);
+});
+document.addEventListener('mouseleave', () => {
+  if (!S.menubarAutoHide) return;
+  clearTimeout(barHideT);
+  barHideT = setTimeout(() => setBarShown(false), 700);
+});
+
 const LOGO_DEFAULT = $('logo').innerHTML;
 App.init(async (s, first) => {
   S = s;
   // Con il tema Demoniaccio il logo diventa la "D"
   $('logo').innerHTML = s.skin === 'demoniaccio' ? '<img src="skins/demoniaccio/mark.png" style="height:17px;width:auto;display:block">' : LOGO_DEFAULT;
   if (first) { const st = await window.lumen.barState(); active = st.fg; pomo = st.pomo; renderStats(st.stats); }
-  renderLabel(); tick(); battery(); renderDesks(); if (!S.menubarShowStats) renderStats(null);
+  renderLabel(); tick(); battery(); renderDesks();
+  if (S.menubarAutoHide && barShown) setBarShown(false);
+  if (!S.menubarAutoHide && !barShown) { barShown = true; $('bar').style.transform = ''; } if (!S.menubarShowStats) renderStats(null);
 });

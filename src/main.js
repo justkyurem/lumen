@@ -12,6 +12,8 @@ const { AppIndex, exeFrom } = require('./features/apps');
 const { ClipHistory } = require('./features/clipboard');
 const I18N = require('./ui/i18n');
 
+// Solo per le prove: profilo separato, così non interferisce con la Lumen installata
+if (process.env.LUMEN_TEST_PROFILE) app.setPath('userData', process.env.LUMEN_TEST_PROFILE);
 if (!app.requestSingleInstanceLock()) { app.quit(); return; }
 
 const UI = (f) => path.join(__dirname, 'ui', f);
@@ -24,7 +26,7 @@ const W = { dock: null, bars: new Map(), launcher: null, clip: null, control: nu
 let tray;
 let quitting = false;
 const state = {
-  windows: [], fg: null, prevFg: null, pomo: null, stats: null, weather: null,
+  windows: [], fg: null, prevFg: null, fullscreen: null, pomo: null, stats: null, weather: null,
   unpinned: [], running: [], recycle: 0, popoverMode: null, previewKey: null,
 };
 
@@ -72,19 +74,48 @@ function dockItemCount() {
   if (S.dockShowTrash) n += 1;
   return Math.max(n, 3);
 }
+// Spazio riservato in basso per il dock (DIP): l'area di lavoro lo esclude già, quindi lo riaggiungiamo per posizionare il dock
+let dockReservedH = 0;
+const dockStripH = () => eff().dockSize + 22;
 function dockBounds() {
   const wa = primary().workArea;
   const E = eff(), s = E.dockSize, scale = E.dockMagnify ? E.dockMagnifyScale : 1;
   const width = Math.min(wa.width, Math.round(dockItemCount() * (s + 6) + 70 + s * (scale - 1) * 3.2));
   const height = Math.round(s * scale + 64);
-  return { x: Math.round(wa.x + (wa.width - width) / 2), y: wa.y + wa.height - height, width, height };
+  const bottom = wa.y + wa.height + dockReservedH;
+  return { x: Math.round(wa.x + (wa.width - width) / 2), y: bottom - height, width, height };
 }
 function createDock() {
   W.dock = new BrowserWindow(overlay({ ...dockBounds(), focusable: false }));
   W.dock.setAlwaysOnTop(true, 'screen-saver');
   W.dock.setIgnoreMouseEvents(true, { forward: true });
   W.dock.loadFile(UI('dock.html'));
-  W.dock.once('ready-to-show', () => W.dock.showInactive());
+  W.dock.once('ready-to-show', () => { W.dock.showInactive(); reserveDock(); });
+}
+
+// Riserva lo spazio del dock come una barra di sistema: le finestre massimizzate si fermano sopra il dock
+let dockReserveBusy = false;
+async function reserveDock() {
+  if (!alive(W.dock) || dockReserveBusy) return;
+  dockReserveBusy = true;
+  try {
+    const want = S.dockReserve && !eff().dockAutoHide;
+    const h = hwndOf(W.dock);
+    if (!want) {
+      if (dockReservedH) { await fast.safe('appBarRemove', { hwnds: [h] }); dockReservedH = 0; }
+    } else {
+      const p = primary();
+      const strip = dockStripH();
+      if (dockReservedH !== strip) {
+        // la striscia parte dal fondo dell'area di lavoro attuale (sopra la barra di Windows, se visibile)
+        const base = p.workArea.y + p.workArea.height + dockReservedH;
+        const r = screen.dipToScreenRect(W.dock, { x: p.bounds.x, y: base - strip, width: p.bounds.width, height: strip });
+        await fast.safe('appBarBottom', { hwnd: h, l: r.x, t: r.y, r: r.x + r.width, b: r.y + r.height });
+        dockReservedH = strip;
+      }
+    }
+  } finally { dockReserveBusy = false; }
+  setTimeout(() => { if (alive(W.dock)) W.dock.setBounds(dockBounds()); }, 400);
 }
 
 // ---------- Barre dei menu (una per monitor) ----------
@@ -103,19 +134,21 @@ function syncBars() {
       w = new BrowserWindow(overlay({ ...b, focusable: false }));
       w.setAlwaysOnTop(true, 'screen-saver');
       w.loadFile(UI('menubar.html'));
-      w.once('ready-to-show', () => { w.showInactive(); reserveAppBar(w, d); });
+      w.once('ready-to-show', () => { if (state.fullscreen !== id) w.showInactive(); reserveAppBar(w, d); });
       W.bars.set(id, w);
     } else {
       w.setBounds(b);
       reserveAppBar(w, d);
     }
+    // Barra a scomparsa: i clic passano alle finestre sotto finché il mouse non arriva sul bordo in alto
+    w.setIgnoreMouseEvents(!!S.menubarAutoHide, { forward: true });
   }
 }
 
 async function reserveAppBar(w, d) {
   if (!alive(w)) return;
   const h = hwndOf(w);
-  if (!S.menubarReserve) return fast.safe('appBarRemove', { hwnds: [h] });
+  if (!S.menubarReserve || S.menubarAutoHide) return fast.safe('appBarRemove', { hwnds: [h] });
   const r = screen.dipToScreenRect(w, { x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: BAR_H });
   await fast.safe('appBar', { hwnd: h, l: r.x, t: r.y, r: r.x + r.width, b: r.y + r.height });
   if (alive(w)) w.setBounds({ x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: BAR_H });
@@ -249,6 +282,7 @@ function openOnboarding() {
 
 function relayout() {
   if (alive(W.dock)) W.dock.setBounds(dockBounds());
+  reserveDock();
   syncBars();
   syncWidgets();
 }
@@ -344,6 +378,22 @@ async function pollForeground() {
   const changed = !state.fg || fg.hwnd !== state.fg.hwnd || fg.name !== state.fg.name;
   state.fg = fg;
   if (changed) sendBars('active-app', { name: fg.name, exe: fg.exe });
+  checkFullscreen(fg);
+}
+
+// App a schermo intero (giochi, video, F11): barra e dock si tolgono di mezzo su quel monitor, come su macOS
+function checkFullscreen(fg) {
+  let full = null;
+  const isDesktop = /\\explorer\.exe$/i.test(fg.exe || '') && (!fg.title || fg.title === 'Program Manager');
+  if (!isDesktop && !fg.max && !fg.min && fg.w > 0) {
+    const r = screen.screenToDipRect(null, { x: fg.x, y: fg.y, width: fg.w, height: fg.h });
+    const d = screen.getDisplayMatching(r), b = d.bounds;
+    if (r.x <= b.x + 1 && r.y <= b.y + 1 && r.x + r.width >= b.x + b.width - 1 && r.y + r.height >= b.y + b.height - 1) full = d.id;
+  }
+  if (full === state.fullscreen) return;
+  state.fullscreen = full;
+  for (const [id, w] of W.bars) { if (!alive(w) || !S.showMenubar) continue; id === full ? w.hide() : w.showInactive(); }
+  if (alive(W.dock)) { full === primary().id ? W.dock.hide() : W.dock.showInactive(); }
 }
 
 let lastWinSig = '';
@@ -677,6 +727,7 @@ handle('dock-icons', async () => {
   return out;
 });
 handle('dock-state', () => ({ running: state.running, unpinned: state.unpinned, recycle: state.recycle }));
+on('bar-mouse', (inside, e) => { const w = BrowserWindow.fromWebContents(e.sender); if (alive(w) && S.menubarAutoHide) w.setIgnoreMouseEvents(!inside, { forward: true }); });
 on('dock-mouse', (inside) => { if (alive(W.dock)) W.dock.setIgnoreMouseEvents(!inside, { forward: true }); });
 on('dock-click', async (kind, key, rect, e) => {
   if (kind === 'lumen') return openSettings();
@@ -1180,6 +1231,13 @@ async function runSnapshots(dir) {
     const tot = Math.round(m.reduce((s, p) => s + (p.memory.privateBytes || p.memory.workingSetSize), 0) / 1024);
     fs.appendFileSync(path.join(dir, 'memory.txt'), `== ${label}: ${tot} MB (privata)\n${rows.join('\n')}\n`);
   };
+  if (process.env.LUMEN_SNAP_ONLY === 'fix') {
+    await fast.ready; await wait(4500);
+    log('area di lavoro con Lumen: ' + JSON.stringify(primary().workArea) + ' dockReservedH=' + dockReservedH + ' dock=' + JSON.stringify(W.dock.getBounds()));
+    await snap('dock', W.dock);
+    openSettings('dock'); await wait(1500); broadcast(); await wait(800); await snap('settings', W.settings);
+    return app.quit();
+  }
   if (process.env.LUMEN_SNAP_ONLY === 'disk') {
     // Solo lettura: panoramica (calcolo senza cancellare) ed esplorazione
     await fast.ready; hooks.disk(); await wait(9000);
@@ -1275,7 +1333,7 @@ app.on('before-quit', async (e) => {
   if (quitting) return;
   e.preventDefault();
   quitting = true;
-  const hwnds = [...W.bars.values()].filter(alive).map(hwndOf);
+  const hwnds = [...W.bars.values(), W.dock].filter(alive).map(hwndOf);
   await Promise.race([fast.safe('appBarRemove', { hwnds }), new Promise(r => setTimeout(r, 1500))]);
   fast.stop(); slow.stop();
   app.quit();

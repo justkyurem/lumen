@@ -36,6 +36,8 @@ const DEFAULTS = {
   showMenubar: true,
   menubarAllDisplays: true,
   menubarReserve: true,
+  menubarAutoHide: false,
+  dockReserve: true,
   menubarShowActiveApp: true,
   menubarLabel: 'Desktop',
   menubarShowStats: false,

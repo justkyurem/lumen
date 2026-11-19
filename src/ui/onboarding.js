@@ -9,6 +9,8 @@ $('accent').addEventListener('click', (e) => { if (e.target.dataset.c) window.lu
 $('themes').addEventListener('click', (e) => { const c = e.target.closest('[data-v]'); if (c) window.lumen.update({ theme: c.dataset.v }); });
 $('lang').addEventListener('click', (e) => { if (e.target.dataset.v) window.lumen.update({ lang: e.target.dataset.v }); });
 $('login').addEventListener('change', (e) => window.lumen.update({ launchAtLogin: e.target.checked }));
+window.lumen.taskbarGet().then(h => { $('hideTaskbar').checked = !!h; });
+$('hideTaskbar').addEventListener('change', async (e) => { const h = await window.lumen.taskbarSet(e.target.checked); e.target.checked = !!h; });
 
 async function loadApps() {
   if (installed) return;

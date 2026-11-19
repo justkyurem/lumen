@@ -30,6 +30,7 @@ contextBridge.exposeInMainWorld('lumen', {
 
   // Barra
   barState: inv('bar-state'),
+  barMouse: (inside) => ipcRenderer.send('bar-mouse', !!inside),
   barMenu: (pos) => ipcRenderer.send('bar-menu', pos),
   pomoMenu: (pos) => ipcRenderer.send('bar-pomo-menu', pos),
   toggleControl: (x) => ipcRenderer.send('toggle-control', x),

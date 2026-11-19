@@ -449,6 +449,8 @@ Object.assign(D.en, {
 Object.assign(D.it, {
   'cmd.disk': 'Analisi disco (PuliDisco)', 'cmdk.disk': 'disco,spazio,pulidisco,analisi,pulizia disco',
   'perf.diskRow': 'Analisi disco (PuliDisco)', 'perf.diskHint': 'Cosa occupa spazio, file grandi, cache di browser e app, cartelle di sviluppo, report', 'perf.diskOpen': 'Apri',
+  's.barAutoHide': 'Nascondi automaticamente la barra', 's.barAutoHideHint': 'Ricompare portando il mouse sul bordo in alto',
+  's.dockReserve': 'Riserva spazio per il dock', 's.dockReserveHint': 'Le finestre massimizzate si fermano sopra il dock invece di finirci sotto',
   'disk.title': 'Analisi disco', 'disk.tabOver': 'Panoramica', 'disk.tabExplore': 'Esplora cartelle', 'disk.tabBig': 'File più grandi',
   'disk.tabClean': 'Pulizia cache', 'disk.tabDev': 'Cartelle di sviluppo', 'disk.tabReport': 'Report HTML',
   'disk.engine': 'Motore: PuliDisco', 'disk.classic': 'Apri la versione a menu nel terminale',
@@ -472,6 +474,8 @@ Object.assign(D.it, {
 Object.assign(D.en, {
   'cmd.disk': 'Disk analysis (PuliDisco)', 'cmdk.disk': 'disk,space,pulidisco,analysis,disk cleanup',
   'perf.diskRow': 'Disk analysis (PuliDisco)', 'perf.diskHint': 'What takes up space, big files, browser and app caches, dev folders, report', 'perf.diskOpen': 'Open',
+  's.barAutoHide': 'Automatically hide the menu bar', 's.barAutoHideHint': 'It reappears when you move the mouse to the top edge',
+  's.dockReserve': 'Reserve space for the Dock', 's.dockReserveHint': 'Maximized windows stop above the Dock instead of going under it',
   'disk.title': 'Disk analysis', 'disk.tabOver': 'Overview', 'disk.tabExplore': 'Explore folders', 'disk.tabBig': 'Largest files',
   'disk.tabClean': 'Cache cleanup', 'disk.tabDev': 'Dev folders', 'disk.tabReport': 'HTML report',
   'disk.engine': 'Engine: PuliDisco', 'disk.classic': 'Open the menu version in a terminal',

@@ -242,7 +242,7 @@ $('wpGrid').addEventListener('click', async (e) => {
 // ---------- Sincronizzazione ----------
 App.init(async (s, first) => {
   S = s;
-  if (first) buildNav(); else { document.querySelectorAll('nav button[data-tab] span').forEach(sp => { sp.textContent = t('nav.' + sp.parentElement.dataset.tab); }); }
+  if (first) buildNav(); else { document.querySelectorAll('nav button[data-tab] > span:not(.ico)').forEach(sp => { sp.textContent = t('nav.' + sp.parentElement.dataset.tab); }); }
   syncControls();
   segs.forEach(f => f());
   document.querySelectorAll('#accent button').forEach(b => b.classList.toggle('on', b.dataset.c === S.accent));

@@ -273,6 +273,19 @@ namespace Lumen {
       var d = new APPBARDATA(); d.cbSize = Marshal.SizeOf(d); d.hWnd = new IntPtr(hwnd);
       SHAppBarMessage(1, ref d);
     }
+
+    // AppBar sul bordo inferiore (dock): Windows lo posiziona sopra la barra delle applicazioni se è visibile.
+    // Restituisce il rettangolo effettivamente riservato.
+    public static int[] AppBarBottom(long hwnd, int l, int t, int r, int b) {
+      var d = new APPBARDATA(); d.cbSize = Marshal.SizeOf(d); d.hWnd = new IntPtr(hwnd); d.uCallbackMessage = 0x8000 + 78;
+      SHAppBarMessage(0, ref d);
+      int h = b - t;
+      d.uEdge = 3; d.rc.L = l; d.rc.T = t; d.rc.R = r; d.rc.B = b;
+      SHAppBarMessage(2, ref d);
+      d.rc.T = d.rc.B - h;
+      SHAppBarMessage(3, ref d);
+      return new int[] { d.rc.L, d.rc.T, d.rc.R, d.rc.B };
+    }
   }
 }
 '@
@@ -573,6 +586,7 @@ function Handle($cmd, $a) {
     'taskbar'     { [Lumen.Native]::GetTaskbarAutoHide() }
     'setTaskbar'  { [Lumen.Native]::SetTaskbarAutoHide([bool]$a.hide); $true }
     'appBar'      { [Lumen.Native]::AppBar([long]$a.hwnd, $a.l, $a.t, $a.r, $a.b); $true }
+    'appBarBottom'{ , @([Lumen.Native]::AppBarBottom([long]$a.hwnd, $a.l, $a.t, $a.r, $a.b)) }
     'appBarRemove'{ foreach ($h in $a.hwnds) { [Lumen.Native]::AppBarRemove([long]$h) }; $true }
     'sleep'       { [Lumen.Native]::Sleep(); $true }
     'startApps'   { , @(Get-StartApps | ForEach-Object { @{ name = $_.Name; id = $_.AppID } }) }
