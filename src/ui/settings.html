@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: file:; style-src 'self' 'unsafe-inline'">
+<title>Lumen</title>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="form.css">
+<style>
+  body { display: grid; grid-template-columns: 216px 1fr; }
+  nav { padding: 50px 10px 16px; display: flex; flex-direction: column; gap: 1px; overflow-y: auto; }
+  nav .brand { position: fixed; top: 13px; left: 18px; font-weight: 650; font-size: 13px; display: flex; gap: 8px; align-items: center; z-index: 60; }
+  nav .brand i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--accent); display: inline-block; }
+  nav button { all: unset; padding: 6px 10px; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  nav button .ico { width: 16px; height: 16px; color: var(--accent); }
+  nav button:hover { background: var(--hover); }
+  nav button.active { background: var(--panel2); box-shadow: 0 0 0 .5px var(--line); font-weight: 600; }
+  nav .sep { height: 1px; background: var(--line); margin: 6px 10px; }
+  main { background: var(--bg); border-left: 1px solid var(--line); padding: 52px 32px 40px; overflow-y: auto; }
+  section { display: none; max-width: 600px; }
+  section.active { display: block; animation: in .2s ease-out; }
+  @keyframes in { from { opacity: 0; transform: translateY(4px); } }
+
+  .apps .row { cursor: grab; }
+  .apps .row.dragging { opacity: .4; }
+  .apps .row.over { box-shadow: inset 0 2px 0 var(--accent); }
+  .app-ico { width: 32px; height: 32px; border-radius: 8px; background: var(--field); display: flex; align-items: center; justify-content: center; flex: none; overflow: hidden; color: var(--accent); font-weight: 600; }
+  .app-ico img { width: 22px; height: 22px; }
+  .app-ico.custom img { width: 100%; height: 100%; object-fit: cover; }
+  .app-ico .ico { width: 18px; height: 18px; }
+  .app-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
+  .app-main input { all: unset; font-weight: 550; width: 100%; padding: 2px 4px; border-radius: 4px; }
+  .app-main input:focus { background: var(--field); }
+  .app-path { color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 4px; }
+  .icon-btn { all: unset; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+  .icon-btn:hover { background: var(--hover); color: var(--text); }
+  .icon-btn .ico { width: 15px; height: 15px; }
+
+  .preset.on { box-shadow: 0 0 0 2px var(--accent); }
+  .presets { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 14px 16px; }
+  .preset { border-radius: 10px; padding: 8px; box-shadow: 0 0 0 .5px var(--line); text-align: center; font-size: 12px; }
+  .preset:hover { box-shadow: 0 0 0 2px var(--accent); }
+  .preset .pv { height: 54px; border-radius: 7px; margin-bottom: 6px; position: relative; overflow: hidden; }
+  .preset .pv i { position: absolute; left: 20%; right: 20%; bottom: 6px; height: 12px; border-radius: 4px; }
+  .preset .pv b { position: absolute; left: 0; right: 0; top: 0; height: 7px; }
+
+  .corners { position: relative; height: 230px; margin: 14px 16px; border-radius: 12px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 35%, var(--panel2)), var(--field)); box-shadow: inset 0 0 0 1px var(--line); }
+  .corners select { position: absolute; min-width: 150px; }
+  .corners select[data-c=tl] { top: 12px; left: 12px; }
+  .corners select[data-c=tr] { top: 12px; right: 12px; }
+  .corners select[data-c=bl] { bottom: 12px; left: 12px; }
+  .corners select[data-c=br] { bottom: 12px; right: 12px; }
+  .corners .mid { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; pointer-events: none; }
+
+  .keys td { padding: 7px 16px; border-top: 1px solid var(--line); font-size: 12.5px; }
+  .keys tr:first-child td { border-top: 0; }
+  .keys { width: 100%; border-collapse: collapse; }
+  .keys td:last-child { text-align: right; }
+
+  .wp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 14px 16px; }
+  .wp { text-align: center; font-size: 12px; }
+  .wp .img { aspect-ratio: 16/10; border-radius: 9px; background: var(--field) center/cover no-repeat; box-shadow: 0 0 0 .5px var(--line); margin-bottom: 6px; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+  .wp .img:hover { box-shadow: 0 0 0 2px var(--accent); }
+  .hero-card { display: flex; align-items: center; gap: 16px; padding: 18px 20px; margin-bottom: 18px; border-radius: 14px; color: #fff;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #000)); box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .hero-card .hint { color: rgba(255,255,255,.82); }
+  .hero-card b { font-size: 15px; }
+  .hero-ico { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center; font-size: 22px; flex: none; }
+  .hero-txt { flex: 1; }
+  .hero-card .btn.primary { background: #fff; color: #111; }
+  .btn.big { padding: 9px 18px; font-size: 13px; }
+  .tag { font-size: 11px; padding: 2px 7px; border-radius: 6px; background: var(--field); color: var(--muted); margin-left: 6px; white-space: nowrap; }
+  .tag.perm { color: #ff9f0a; }
+  .tag.rev { color: #30d158; }
+  .ck { display: flex; gap: 12px; align-items: flex-start; padding: 10px 4px; border-top: 1px solid var(--line); }
+  .ck:first-child { border-top: 0; }
+  .ck input { margin-top: 3px; accent-color: var(--accent); width: 16px; height: 16px; flex: none; }
+  .ck .d { flex: 1; min-width: 0; }
+  .ck .d small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .sub-list { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .sub-list label { font-size: 12px; background: var(--field); border-radius: 6px; padding: 3px 8px; display: flex; gap: 6px; align-items: center; }
+  .sub-list input { margin: 0; width: 13px; height: 13px; }
+  .modal .body { overflow-y: auto; padding: 4px 16px 10px; flex: 1; }
+  .spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent); animation: sp 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .proc-mem { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; margin-right: 6px; }
+  .wp-big { margin: 14px 16px; aspect-ratio: 16/9; border-radius: 10px; background: var(--field) center/cover no-repeat; box-shadow: 0 0 0 .5px var(--line); display: flex; align-items: center; justify-content: center; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="drag"></div>
+<nav id="nav">
+  <div class="brand"><i></i>Lumen</div>
+</nav>
+
+<main>
+  <!-- GENERALE -->
+  <section id="generale">
+    <h1 data-i18n="nav.generale"></h1><p class="sub" data-i18n="s.generale.sub"></p>
+    <div class="group">
+      <div class="row"><span data-i18n="s.lang"></span><div class="seg" id="lang"><button data-v="it">Italiano</button><button data-v="en">English</button></div></div>
+      <div class="row"><span data-i18n="s.login"></span><label class="sw"><input type="checkbox" data-k="launchAtLogin"><span></span></label></div>
+    </div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="s.autoUpdate"></span><span class="hint" id="updHint"></span></span><div class="ctrl"><button class="btn" id="checkUpd" data-i18n="s.checkNow"></button><label class="sw"><input type="checkbox" data-k="autoUpdate"><span></span></label></div></div>
+      <div class="row"><span><span data-i18n="s.memory"></span><span class="hint" data-i18n="s.memoryHint"></span></span><b class="val" id="mem">…</b></div>
+      <div class="row"><span data-i18n="s.version"></span><span class="val" id="ver"></span></div>
+    </div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="s.welcome"></span><span class="hint" data-i18n="s.welcomeHint"></span></span><button class="btn" id="reWelcome" data-i18n="s.open"></button></div>
+      <div class="row"><span data-i18n="s.quit"></span><button class="btn danger" id="quit" data-i18n="s.quitBtn"></button></div>
+    </div>
+  </section>
+
+  <!-- PRESTAZIONI -->
+  <section id="prestazioni">
+    <h1 data-i18n="nav.prestazioni"></h1><p class="sub" data-i18n="s.prestazioni.sub"></p>
+    <div class="hero-card">
+      <div class="hero-ico">✦</div>
+      <div class="hero-txt"><b data-i18n="perf.oneTitle"></b><span class="hint" data-i18n="perf.oneHint"></span></div>
+      <button class="btn primary big" id="oneClick" data-i18n="perf.oneBtn"></button>
+    </div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="perf.diskRow"></span><span class="hint" data-i18n="perf.diskHint"></span></span><button class="btn" id="openDisk" data-i18n="perf.diskOpen"></button></div>
+    </div>
+    <div class="group hidden" id="restoreBox">
+      <div class="row"><span><span data-i18n="perf.restoreTitle"></span><span class="hint" id="restoreHint"></span></span><button class="btn" id="restore" data-i18n="perf.restore"></button></div>
+    </div>
+
+    <div class="group-title" data-i18n="perf.windows"></div>
+    <div class="group" id="perfToggles">
+      <div class="row"><span><span data-i18n="perf.animations"></span><span class="hint" data-i18n="perf.animationsHint"></span></span><label class="sw"><input type="checkbox" data-perf="animations"><span></span></label></div>
+      <div class="row"><span><span data-i18n="perf.transparency"></span><span class="hint" data-i18n="perf.transparencyHint"></span></span><label class="sw"><input type="checkbox" data-perf="transparency"><span></span></label></div>
+      <div class="row"><span><span data-i18n="perf.background"></span><span class="hint" data-i18n="perf.backgroundHint"></span></span><label class="sw"><input type="checkbox" data-perf="background"><span></span></label></div>
+      <div class="row"><span><span data-i18n="perf.tips"></span><span class="hint" data-i18n="perf.tipsHint"></span></span><label class="sw"><input type="checkbox" data-perf="tips"><span></span></label></div>
+      <div class="row"><span data-i18n="perf.power"></span><select id="powerPlan"></select></div>
+    </div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="perf.lite"></span><span class="hint" data-i18n="perf.liteHint"></span></span><label class="sw"><input type="checkbox" data-perf="liteMode"><span></span></label></div>
+    </div>
+
+    <div class="group-title" data-i18n="perf.cleanTitle"></div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="perf.temp"></span><span class="hint" id="tempHint">…</span></span><button class="btn" id="cleanTemp" data-i18n="perf.clean"></button></div>
+    </div>
+
+    <div class="group">
+      <div class="row"><span><span data-i18n="s.autoClean"></span><span class="hint" data-i18n="s.autoCleanHint"></span></span><label class="sw"><input type="checkbox" data-k="autoClean"><span></span></label></div>
+      <div class="row"><span><span data-i18n="s.autoCleanRecycle"></span><span class="hint" data-i18n="perf.permanent"></span></span><label class="sw"><input type="checkbox" data-k="autoCleanRecycle"><span></span></label></div>
+      <div class="row"><span><span data-i18n="s.alerts"></span><span class="hint" data-i18n="s.alertsHint"></span></span><label class="sw"><input type="checkbox" data-k="alertsEnabled"><span></span></label></div>
+    </div>
+
+    <div class="group-title" data-i18n="perf.startupTitle"></div>
+    <div class="group" id="startupList"><div class="row hint">…</div></div>
+
+    <div class="group-title" style="display:flex;justify-content:space-between"><span data-i18n="perf.procsTitle"></span><a id="procsRefresh" data-i18n="perf.refresh" style="color:var(--accent)"></a></div>
+    <div class="group" id="procList"><div class="row hint">…</div></div>
+  </section>
+
+  <!-- PROFILI -->
+  <section id="profili">
+    <h1 data-i18n="nav.profili"></h1><p class="sub" data-i18n="s.profili.sub"></p>
+    <div class="group" id="profileList"></div>
+    <div class="group-title" data-i18n="s.liveApps"></div>
+    <div class="group" id="liveApps"></div>
+    <div class="btns" style="margin-bottom:22px"><button class="btn" id="addLiveApp" data-i18n="s.addInstalled"></button><button class="btn" id="addLiveFile" data-i18n="s.addFile"></button></div>
+    <div class="group-title">OBS Studio</div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="s.obsOn"></span><span class="hint" data-i18n="s.obsHint"></span></span><label class="sw"><input type="checkbox" data-k="obsEnabled"><span></span></label></div>
+      <div class="row"><span data-i18n="s.obsHost"></span><input type="text" data-k="obsHost"></div>
+      <div class="row"><span data-i18n="s.obsPort"></span><input type="number" data-k="obsPort" data-num min="1" max="65535" style="width:100px"></div>
+      <div class="row"><span><span data-i18n="s.obsPassword"></span><span class="hint" data-i18n="s.obsPasswordHint"></span></span><input type="password" id="obsPassword" autocomplete="off"></div>
+      <div class="row"><span class="hint" id="obsTestRes"></span><button class="btn" id="obsTest" data-i18n="s.obsTest"></button></div>
+    </div>
+  </section>
+
+  <!-- STRUMENTI -->
+  <section id="strumenti">
+    <h1 data-i18n="nav.strumenti"></h1><p class="sub" data-i18n="s.strumenti.sub"></p>
+    <div class="group">
+      <div class="row"><span><span data-i18n="cmd.mission"></span><span class="hint" data-i18n="s.missionHint"></span></span><select data-k="missionShortcut"><option>Alt+W</option><option>Ctrl+Alt+W</option><option>Alt+Shift+W</option><option>F3</option></select></div>
+      <div class="row"><span><span>Quick Look</span><span class="hint" data-i18n="s.qlHint"></span></span><select data-k="quickLookShortcut"><option>Alt+Q</option><option>Ctrl+Alt+Q</option><option>Alt+Shift+Q</option></select></div>
+      <div class="row"><span><span data-i18n="cmd.picker"></span><span class="hint" data-i18n="s.pickerHint"></span></span><div class="ctrl"><select data-k="pickerShortcut"><option>Ctrl+Alt+P</option><option>Alt+Shift+C</option><option>Ctrl+Shift+C</option></select><button class="btn" id="pickNow" data-i18n="s.pickNow"></button></div></div>
+      <div class="row"><span data-i18n="s.recentColors"></span><div class="swatches" id="recentColors"></div></div>
+    </div>
+
+    <div class="group-title" data-i18n="s.renameTitle"></div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="s.renamePattern"></span><span class="hint" data-i18n="s.renameHint"></span></span><input type="text" id="rnPattern" value="{name}"></div>
+      <div class="row"><span data-i18n="s.renameFind"></span><div class="ctrl"><input type="text" id="rnFind" style="width:130px" data-i18n-ph="s.find"><input type="text" id="rnRepl" style="width:130px" data-i18n-ph="s.replace"></div></div>
+      <div class="row"><span data-i18n="s.renameStart"></span><input type="number" id="rnStart" value="1" min="0" max="99999"></div>
+      <div id="rnPreview"></div>
+      <div class="row"><span class="hint" id="rnStatus"></span><div class="btns"><button class="btn" id="rnPick" data-i18n="s.pickFiles"></button><button class="btn hidden" id="rnUndo" data-i18n="s.undo"></button><button class="btn primary" id="rnApply" data-i18n="s.rename" disabled></button></div></div>
+    </div>
+
+    <div class="group-title" data-i18n="s.convertTitle"></div>
+    <div class="group">
+      <div class="row"><span data-i18n="s.format"></span><div class="seg" id="cvFormat"><button data-v="jpg" class="on">JPG</button><button data-v="png">PNG</button><button data-v="webp">WebP</button></div></div>
+      <div class="row"><span><span data-i18n="s.maxWidth"></span><span class="hint" data-i18n="s.maxWidthHint"></span></span><input type="number" id="cvWidth" value="0" min="0" max="20000"></div>
+      <div class="row"><span><span data-i18n="s.quality"></span></span><div class="ctrl"><input type="range" id="cvQuality" min="0.4" max="1" step="0.05" value="0.88"><span class="val" id="cvQualityV">88%</span></div></div>
+      <div class="row"><span class="hint" id="cvStatus" data-i18n="s.convertHint"></span><button class="btn primary" id="cvPick" data-i18n="s.convertPick"></button></div>
+    </div>
+  </section>
+
+  <!-- SNIPPET -->
+  <section id="snippet">
+    <h1 data-i18n="nav.snippet"></h1><p class="sub" data-i18n="s.snippet.sub"></p>
+    <div class="group">
+      <div class="row"><span><span data-i18n="s.snipOn"></span><span class="hint" data-i18n="s.snipHint"></span></span><label class="sw"><input type="checkbox" data-k="snippetsEnabled"><span></span></label></div>
+    </div>
+    <div class="group" id="snipList"></div>
+    <button class="btn primary" id="snipAdd" data-i18n="s.snipAdd"></button>
+  </section>
+
+  <!-- ASPETTO -->
+  <section id="aspetto">
+    <h1 data-i18n="nav.aspetto"></h1><p class="sub" data-i18n="s.aspetto.sub"></p>
+    <div class="group">
+      <div class="row"><span data-i18n="s.theme"></span><div class="seg" id="theme"><button data-v="auto" data-i18n="s.auto"></button><button data-v="light" data-i18n="s.light"></button><button data-v="dark" data-i18n="s.dark"></button></div></div>
+      <div class="row"><span data-i18n="s.accent"></span><div class="swatches" id="accent"></div></div>
+    </div>
+    <div class="group-title" data-i18n="s.presets"></div>
+    <div class="group"><div class="presets" id="presets"></div></div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="s.themeFile"></span><span class="hint" data-i18n="s.themeFileHint"></span></span><div class="btns"><button class="btn" id="importTheme" data-i18n="s.import"></button><button class="btn" id="exportTheme" data-i18n="s.export"></button></div></div>
+    </div>
+  </section>
+
+  <!-- DOCK -->
+  <section id="dock">
+    <h1 data-i18n="nav.dock"></h1><p class="sub" data-i18n="s.dock.sub"></p>
+    <div class="group">
+      <div class="row"><span data-i18n="s.size"></span><div class="ctrl"><input type="range" data-k="dockSize" min="36" max="80" step="2"><span class="val" id="dockSizeV"></span></div></div>
+      <div class="row"><span data-i18n="s.magnify"></span><label class="sw"><input type="checkbox" data-k="dockMagnify"><span></span></label></div>
+      <div class="row"><span data-i18n="s.magnifyAmount"></span><div class="ctrl"><input type="range" data-k="dockMagnifyScale" min="1.1" max="2" step="0.05"><span class="val" id="dockMagnifyScaleV"></span></div></div>
+    </div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="s.autoHide"></span><span class="hint" data-i18n="s.autoHideHint"></span></span><label class="sw"><input type="checkbox" data-k="dockAutoHide"><span></span></label></div>
+      <div class="row"><span data-i18n="s.showRunning"></span><label class="sw"><input type="checkbox" data-k="dockShowRunning"><span></span></label></div>
+      <div class="row"><span><span data-i18n="s.showUnpinned"></span><span class="hint" data-i18n="s.showUnpinnedHint"></span></span><label class="sw"><input type="checkbox" data-k="dockShowUnpinned"><span></span></label></div>
+      <div class="row"><span><span data-i18n="s.previews"></span><span class="hint" data-i18n="s.previewsHint"></span></span><label class="sw"><input type="checkbox" data-k="dockPreviews"><span></span></label></div>
+      <div class="row"><span data-i18n="s.trash"></span><label class="sw"><input type="checkbox" data-k="dockShowTrash"><span></span></label></div>
+    </div>
+  </section>
+
+  <!-- APP NEL DOCK -->
+  <section id="app">
+    <h1 data-i18n="nav.app"></h1><p class="sub" data-i18n="s.app.sub"></p>
+    <div class="group apps" id="appList"></div>
+    <div class="btns"><button class="btn primary" id="addInstalled" data-i18n="s.addInstalled"></button><button class="btn" id="addApp" data-i18n="s.addFile"></button><button class="btn" id="addFolder" data-i18n="s.addFolder"></button></div>
+  </section>
+
+  <!-- BARRA -->
+  <section id="barra">
+    <h1 data-i18n="nav.barra"></h1><p class="sub" data-i18n="s.barra.sub"></p>
+    <div class="group">
+      <div class="row"><span data-i18n="s.showBar"></span><label class="sw"><input type="checkbox" data-k="showMenubar"><span></span></label></div>
+      <div class="row"><span data-i18n="s.allDisplays"></span><label class="sw"><input type="checkbox" data-k="menubarAllDisplays"><span></span></label></div>
+      <div class="row"><span><span data-i18n="s.reserve"></span><span class="hint" data-i18n="s.reserveHint"></span></span><label class="sw"><input type="checkbox" data-k="menubarReserve"><span></span></label></div>
+    </div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="s.winTaskbar"></span><span class="hint" data-i18n="s.winTaskbarHint"></span></span><label class="sw"><input type="checkbox" id="winTaskbar"><span></span></label></div>
+    </div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="s.activeApp"></span><span class="hint" data-i18n="s.activeAppHint"></span></span><label class="sw"><input type="checkbox" data-k="menubarShowActiveApp"><span></span></label></div>
+      <div class="row"><span data-i18n="s.label"></span><input type="text" data-k="menubarLabel" maxlength="40"></div>
+      <div class="row"><span><span data-i18n="s.showDesktops"></span><span class="hint" data-i18n="s.showDesktopsHint"></span></span><label class="sw"><input type="checkbox" data-k="showDesktops"><span></span></label></div>
+      <div class="row"><span data-i18n="s.stats"></span><label class="sw"><input type="checkbox" data-k="menubarShowStats"><span></span></label></div>
+    </div>
+    <div class="group">
+      <div class="row"><span data-i18n="s.showDate"></span><label class="sw"><input type="checkbox" data-k="showDate"><span></span></label></div>
+      <div class="row"><span data-i18n="s.clock24"></span><label class="sw"><input type="checkbox" data-k="clock24"><span></span></label></div>
+      <div class="row"><span data-i18n="s.seconds"></span><label class="sw"><input type="checkbox" data-k="showSeconds"><span></span></label></div>
+      <div class="row"><span><span data-i18n="s.battery"></span><span class="hint" data-i18n="s.batteryHint"></span></span><label class="sw"><input type="checkbox" data-k="showBattery"><span></span></label></div>
+    </div>
+  </section>
+
+  <!-- RICERCA -->
+  <section id="ricerca">
+    <h1 data-i18n="nav.ricerca"></h1><p class="sub" data-i18n="s.ricerca.sub"></p>
+    <div class="group">
+      <div class="row"><span data-i18n="s.enabled"></span><label class="sw"><input type="checkbox" data-k="launcherEnabled"><span></span></label></div>
+      <div class="row"><span><span data-i18n="s.shortcut"></span><span class="hint" id="lsStatus"></span></span><select data-k="launcherShortcut"><option>Alt+Space</option><option>Ctrl+Space</option><option>Ctrl+Alt+Space</option><option>Alt+Shift+Space</option></select></div>
+      <div class="row"><span><span data-i18n="s.searchFiles"></span><span class="hint" data-i18n="s.searchFilesHint"></span></span><label class="sw"><input type="checkbox" data-k="launcherFiles"><span></span></label></div>
+      <div class="row"><span><span data-i18n="s.browserSearch"></span><span class="hint" data-i18n="s.browserSearchHint"></span></span><label class="sw"><input type="checkbox" data-k="launcherBrowser"><span></span></label></div>
+      <div class="row"><span data-i18n="s.engine"></span><select data-k="launcherWeb"><option value="google">Google</option><option value="duckduckgo">DuckDuckGo</option><option value="bing">Bing</option></select></div>
+    </div>
+    <div class="group-title" data-i18n="s.tips"></div>
+    <div class="group"><table class="keys" id="tips"></table></div>
+  </section>
+
+  <!-- APPUNTI -->
+  <section id="appunti">
+    <h1 data-i18n="nav.appunti"></h1><p class="sub" data-i18n="s.appunti.sub"></p>
+    <div class="group">
+      <div class="row"><span data-i18n="s.enabled"></span><label class="sw"><input type="checkbox" data-k="clipboardEnabled"><span></span></label></div>
+      <div class="row"><span><span data-i18n="s.shortcut"></span><span class="hint" id="csStatus"></span></span><select data-k="clipboardShortcut"><option>Ctrl+Shift+V</option><option>Ctrl+Alt+V</option><option>Alt+V</option></select></div>
+      <div class="row"><span data-i18n="s.clipMax"></span><select data-k="clipboardMax" data-num><option>25</option><option>50</option><option>100</option><option>250</option><option>500</option></select></div>
+      <div class="row"><span><span data-i18n="s.privacy"></span><span class="hint" data-i18n="s.privacyHint"></span></span><span class="ok">✓</span></div>
+    </div>
+  </section>
+
+  <!-- WIDGET -->
+  <section id="widget">
+    <h1 data-i18n="nav.widget"></h1><p class="sub" data-i18n="s.widget.sub"></p>
+    <div class="group">
+      <div class="row"><span data-i18n="s.widgetsOn"></span><label class="sw"><input type="checkbox" data-k="widgetsEnabled"><span></span></label></div>
+    </div>
+    <div class="group" id="widgetList"></div>
+    <div class="group">
+      <div class="row"><span><span data-i18n="s.city"></span><span class="hint" data-i18n="s.cityHint"></span></span><input type="text" data-k="weatherCity" data-i18n-ph="w.cityPh"></div>
+    </div>
+  </section>
+
+  <!-- ANGOLI -->
+  <section id="angoli">
+    <h1 data-i18n="nav.angoli"></h1><p class="sub" data-i18n="s.angoli.sub"></p>
+    <div class="group"><div class="corners" id="corners"><div class="mid" data-i18n="s.cornersMid"></div></div></div>
+  </section>
+
+  <!-- FINESTRE -->
+  <section id="finestre">
+    <h1 data-i18n="nav.finestre"></h1><p class="sub" data-i18n="s.finestre.sub"></p>
+    <div class="group">
+      <div class="row"><span data-i18n="s.snap"></span><label class="sw"><input type="checkbox" data-k="snapEnabled"><span></span></label></div>
+    </div>
+    <div class="group"><table class="keys" id="snapKeys"></table></div>
+    <div class="group-title" data-i18n="s.layouts"></div>
+    <div class="group" id="layoutList"></div>
+    <div class="group"><div class="row"><input type="text" id="layoutName" data-i18n-ph="s.layoutName" style="flex:1;width:auto"><button class="btn primary" id="saveLayout" data-i18n="s.saveLayout"></button></div></div>
+  </section>
+
+  <!-- CONCENTRAZIONE -->
+  <section id="concentrazione">
+    <h1 data-i18n="nav.concentrazione"></h1><p class="sub" data-i18n="s.concentrazione.sub"></p>
+    <div class="group">
+      <div class="row"><span data-i18n="s.focusMin"></span><div class="ctrl"><input type="number" data-k="focusMinutes" data-num min="1" max="180"><span class="hint">min</span></div></div>
+      <div class="row"><span data-i18n="s.breakMin"></span><div class="ctrl"><input type="number" data-k="breakMinutes" data-num min="1" max="60"><span class="hint">min</span></div></div>
+    </div>
+  </section>
+
+  <!-- SFONDO -->
+  <section id="sfondo">
+    <h1 data-i18n="nav.sfondo"></h1><p class="sub" data-i18n="s.sfondo.sub"></p>
+    <div class="group">
+      <div class="row"><span data-i18n="s.wpMode"></span><div class="seg" id="wpMode"><button data-v="static" data-i18n="s.static"></button><button data-v="dynamic" data-i18n="s.dynamic"></button></div></div>
+    </div>
+    <div class="group" id="wpStatic"><div class="wp-big" id="wpPrev"></div><div class="row"><span class="hint" data-i18n="s.wpHint"></span><button class="btn primary" id="pickWp" data-i18n="s.chooseImage"></button></div></div>
+    <div class="group-title" data-i18n="s.deskWp"></div>
+    <div class="group" id="deskWp"></div>
+    <div class="group hidden" id="wpDynamic"><div class="wp-grid" id="wpGrid"></div><div class="row"><span class="hint" data-i18n="s.dynHint"></span></div></div>
+  </section>
+</main>
+
+<script src="icons.js"></script>
+<script src="common.js"></script>
+<script src="apppicker.js"></script>
+<script src="settings.js"></script>
+<script src="perf.js"></script>
+<script src="settings-more.js"></script>
+</body>
+</html>

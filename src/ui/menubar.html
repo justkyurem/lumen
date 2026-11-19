@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'">
+<link rel="stylesheet" href="base.css">
+<style>
+  :root { --bar: rgba(246,246,248,.80); }
+  [data-dark="true"] { --bar: rgba(28,28,32,.78); }
+  html, body { height: 100%; overflow: hidden; font-size: 13px; line-height: 1; }
+  #bar { height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; background: var(--bar); border-bottom: 1px solid var(--line); }
+  .side { display: flex; align-items: center; gap: 1px; height: 100%; min-width: 0; }
+  .btn { height: 22px; display: flex; align-items: center; gap: 6px; padding: 0 8px; border-radius: 5px; white-space: nowrap; }
+  .btn:hover { background: var(--hover); }
+  .btn .ico { width: 15px; height: 15px; }
+  .logo { color: var(--accent); }
+  .logo svg { width: 15px; height: 15px; }
+  .title { font-weight: 650; overflow: hidden; text-overflow: ellipsis; max-width: 360px; }
+  .num { font-variant-numeric: tabular-nums; }
+  .pomo { color: var(--accent); font-weight: 600; }
+  .pomo.break { color: #30d158; }
+  .pomo .ring { width: 14px; height: 14px; }
+  .stats { gap: 10px; color: var(--muted); font-size: 12px; }
+  .stats b { color: var(--text); font-weight: 600; }
+  .bat svg { width: 23px; height: 12px; }
+  .desks { display: flex; gap: 2px; margin-right: 4px; }
+  .desks span { min-width: 20px; height: 18px; padding: 0 5px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--muted); }
+  .desks span:hover { background: var(--hover); color: var(--text); }
+  .desks span.on { background: var(--accent); color: #fff; }
+  @keyframes ding { 0%,100% { transform: none } 25% { transform: rotate(-12deg) } 75% { transform: rotate(12deg) } }
+  .ding { animation: ding .25s 6; }
+</style>
+</head>
+<body>
+<div id="bar">
+  <div class="side">
+    <div class="btn logo" id="logo">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="2.4" fill="currentColor"/></svg>
+    </div>
+    <div class="btn title" id="label"></div>
+  </div>
+  <div class="side">
+    <div class="desks hidden" id="desks"></div>
+    <div class="btn pomo num hidden" id="pomo"></div>
+    <div class="btn stats num hidden" id="stats"></div>
+    <div class="btn hidden" id="wifiIco"></div>
+    <div class="btn" id="cc" data-i18n-title="bar.control"></div>
+    <div class="btn bat num hidden" id="bat"></div>
+    <div class="btn num" id="clock" data-i18n-title="bar.panelHint"></div>
+  </div>
+</div>
+<script src="icons.js"></script>
+<script src="common.js"></script>
+<script src="menubar.js"></script>
+</body>
+</html>

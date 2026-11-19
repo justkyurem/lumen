@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'">
+<title>Lumen</title>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="form.css">
+<style>
+  body { background: var(--bg); display: flex; flex-direction: column; }
+  .stage { flex: 1; position: relative; overflow: hidden; }
+  .step { position: absolute; inset: 0; padding: 56px 56px 0; display: flex; flex-direction: column; opacity: 0; transform: translateX(30px); pointer-events: none; transition: opacity .3s, transform .35s cubic-bezier(.2,.8,.2,1); }
+  .step.on { opacity: 1; transform: none; pointer-events: auto; }
+  .step.past { transform: translateX(-30px); }
+  .hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; padding-bottom: 30px; }
+  .logo { width: 88px; height: 88px; border-radius: 22px; background: linear-gradient(180deg, #2c2c31, #1a1a1d); display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 30px rgba(0,0,0,.25); }
+  .logo svg { width: 54px; height: 54px; color: var(--accent); }
+  .hero h1 { font-size: 30px; }
+  .hero p { color: var(--muted); max-width: 420px; font-size: 14.5px; }
+  h2 { font: 650 22px/1.2 var(--font-display); margin-bottom: 4px; }
+  .lead { color: var(--muted); margin-bottom: 20px; }
+  .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
+  .tcard { border-radius: 12px; padding: 8px; text-align: center; font-size: 12.5px; box-shadow: 0 0 0 1px var(--line); }
+  .tcard.on { box-shadow: 0 0 0 2px var(--accent); }
+  .tcard .pv { height: 90px; border-radius: 8px; margin-bottom: 8px; position: relative; overflow: hidden; }
+  .tcard .pv b { position: absolute; top: 0; left: 0; right: 0; height: 9px; }
+  .tcard .pv i { position: absolute; left: 22%; right: 22%; bottom: 8px; height: 16px; border-radius: 5px; }
+  .pv.light { background: #eef0f4; } .pv.light b { background: #fff; } .pv.light i { background: #ffffffcc; box-shadow: 0 0 0 1px #0001; }
+  .pv.dark { background: #1b1b1f; } .pv.dark b { background: #2a2a2f; } .pv.dark i { background: #33333acc; }
+  .pv.auto { background: linear-gradient(90deg, #eef0f4 50%, #1b1b1f 50%); } .pv.auto b { background: linear-gradient(90deg, #fff 50%, #2a2a2f 50%); } .pv.auto i { background: linear-gradient(90deg, #fff 50%, #33333a 50%); }
+  .list { flex: 1; overflow-y: auto; background: var(--panel2); border-radius: 12px; box-shadow: 0 0 0 .5px var(--line); padding: 6px; margin-bottom: 8px; }
+  .search { width: 100% !important; margin-bottom: 10px; }
+  .keys { width: 100%; border-collapse: collapse; background: var(--panel2); border-radius: 12px; box-shadow: 0 0 0 .5px var(--line); overflow: hidden; margin-bottom: 18px; }
+  .keys td { padding: 10px 16px; border-top: 1px solid var(--line); }
+  .keys tr:first-child td { border-top: 0; }
+  .keys td:first-child { width: 170px; }
+  footer { height: 72px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 56px; }
+  .dots { display: flex; gap: 7px; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: background .2s, width .2s; }
+  .dots i.on { background: var(--accent); width: 20px; border-radius: 4px; }
+  .btn.big { padding: 9px 22px; font-size: 13.5px; }
+</style>
+</head>
+<body>
+<div class="drag"></div>
+<div class="stage">
+  <div class="step on" data-s="0">
+    <div class="hero">
+      <div class="logo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg></div>
+      <h1 data-i18n="ob.welcome"></h1>
+      <p data-i18n="ob.intro"></p>
+      <div class="seg" id="lang" style="margin-top:10px"><button data-v="it">Italiano</button><button data-v="en">English</button></div>
+    </div>
+  </div>
+  <div class="step" data-s="1">
+    <h2 data-i18n="ob.lookTitle"></h2><p class="lead" data-i18n="ob.lookLead"></p>
+    <div class="themes" id="themes">
+      <div class="tcard" data-v="light"><div class="pv light"><b></b><i></i></div><span data-i18n="s.light"></span></div>
+      <div class="tcard" data-v="dark"><div class="pv dark"><b></b><i></i></div><span data-i18n="s.dark"></span></div>
+      <div class="tcard" data-v="auto"><div class="pv auto"><b></b><i></i></div><span data-i18n="s.auto"></span></div>
+    </div>
+    <div class="row" style="padding:0"><span data-i18n="s.accent"></span><div class="swatches" id="accent"></div></div>
+  </div>
+  <div class="step" data-s="2">
+    <h2 data-i18n="ob.dockTitle"></h2><p class="lead" data-i18n="ob.dockLead"></p>
+    <input type="text" class="search" id="appSearch" data-i18n-ph="picker.search">
+    <div class="list" id="appList"></div>
+    <div class="hint" id="appCount"></div>
+  </div>
+  <div class="step" data-s="3">
+    <h2 data-i18n="ob.keysTitle"></h2><p class="lead" data-i18n="ob.keysLead"></p>
+    <table class="keys">
+      <tr><td><kbd data-i18n="ob.keyAltSpace"></kbd></td><td data-i18n="ob.kSearch"></td></tr>
+      <tr><td><kbd>Ctrl + Shift + V</kbd></td><td data-i18n="ob.kClip"></td></tr>
+      <tr><td><kbd>Ctrl + Alt + ← → ↑ ↓</kbd></td><td data-i18n="ob.kSnap"></td></tr>
+      <tr><td><kbd data-i18n="ob.cornerKey"></kbd></td><td data-i18n="ob.kCorner"></td></tr>
+      <tr><td><kbd data-i18n="ob.clockKey"></kbd></td><td data-i18n="ob.kControl"></td></tr>
+    </table>
+    <div class="row" style="padding:0"><span data-i18n="s.login"></span><label class="sw"><input type="checkbox" id="login"><span></span></label></div>
+  </div>
+</div>
+<footer>
+  <div class="dots" id="dots"><i class="on"></i><i></i><i></i><i></i></div>
+  <div class="btns"><button class="btn big" id="back" data-i18n="ob.back"></button><button class="btn primary big" id="next" data-i18n="ob.next"></button></div>
+</footer>
+<script src="icons.js"></script>
+<script src="common.js"></script>
+<script src="apppicker.js"></script>
+<script src="onboarding.js"></script>
+</body>
+</html>

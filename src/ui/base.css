@@ -1,0 +1,79 @@
+:root {
+  --accent: #0a84ff;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --glass: rgba(246, 246, 248, .78);
+  --glass-strong: rgba(250, 250, 252, .94);
+  --stroke: rgba(255, 255, 255, .6);
+  --edge: rgba(0, 0, 0, .10);
+  --line: rgba(0, 0, 0, .08);
+  --hover: rgba(0, 0, 0, .06);
+  --field: rgba(0, 0, 0, .05);
+  --tile: linear-gradient(180deg, #ffffff, #eef0f3);
+  --tile-edge: rgba(0, 0, 0, .07);
+  --shadow: 0 0 0 .5px var(--edge), 0 18px 48px rgba(0, 0, 0, .22), 0 2px 8px rgba(0, 0, 0, .08);
+  --font: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+}
+[data-dark="true"] {
+  --text: #f5f5f7;
+  --muted: #98989d;
+  --glass: rgba(34, 34, 38, .80);
+  --glass-strong: rgba(40, 40, 44, .95);
+  --stroke: rgba(255, 255, 255, .12);
+  --edge: rgba(0, 0, 0, .5);
+  --line: rgba(255, 255, 255, .08);
+  --hover: rgba(255, 255, 255, .08);
+  --field: rgba(255, 255, 255, .08);
+  --tile: linear-gradient(180deg, #3a3a3f, #2a2a2e);
+  --tile-edge: rgba(255, 255, 255, .08);
+}
+/* ---------- Tema Demoniaccio: nero-viola, rosso sangue, testo color osso ---------- */
+html[data-skin="demoniaccio"] {
+  --accent: #d11f3d;
+  --text: #efe4d6;
+  --muted: #a6938c;
+  --glass: rgba(20, 11, 15, .86);
+  --glass-strong: rgba(22, 12, 17, .97);
+  --stroke: rgba(209, 31, 61, .32);
+  --edge: rgba(0, 0, 0, .6);
+  --line: rgba(239, 228, 214, .08);
+  --hover: rgba(209, 31, 61, .16);
+  --field: rgba(239, 228, 214, .06);
+  --tile: linear-gradient(180deg, #2b1219, #140a0e);
+  --tile-edge: rgba(209, 31, 61, .38);
+  --shadow: 0 0 0 .5px rgba(209, 31, 61, .35), 0 18px 48px rgba(0, 0, 0, .55), 0 0 40px rgba(209, 31, 61, .12);
+  /* variabili delle singole finestre */
+  --dock-glass: rgba(18, 10, 14, .78);
+  --dot: #d11f3d;
+  --sep: rgba(209, 31, 61, .35);
+  --label-bg: rgba(22, 12, 17, .96);
+  --bar: rgba(14, 8, 11, .88);
+  --w-bg: rgba(18, 10, 14, .74);
+  --side: #0f0a0d;
+  --bg: #140d11;
+  --panel2: #1d1217;
+}
+html[data-skin="demoniaccio"] .panel { border-color: rgba(209, 31, 61, .28); }
+html[data-skin="demoniaccio"] ::selection { background: #d11f3d; color: #fff; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: transparent; color: var(--text); font: 13.5px/1.4 var(--font); user-select: none; -webkit-user-drag: none; cursor: default; }
+img { -webkit-user-drag: none; }
+.hidden { display: none !important; }
+.ico { display: inline-flex; width: 18px; height: 18px; flex: none; }
+.ico svg { width: 100%; height: 100%; }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-thumb { background: var(--field); border-radius: 5px; border: 3px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--hover); }
+
+/* Pannello "vetro" usato da launcher, appunti, centro di controllo, popover */
+.panel {
+  background: var(--glass-strong);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--stroke);
+  overflow: hidden;
+}
+@keyframes pop { from { opacity: 0; transform: scale(.97) translateY(-4px); } }
+.pop { animation: pop .16s cubic-bezier(.2, .8, .2, 1); }

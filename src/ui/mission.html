@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'">
+<link rel="stylesheet" href="base.css">
+<style>
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { background: rgba(8, 8, 12, .62); animation: fade .18s ease-out; display: flex; flex-direction: column; }
+  html[data-skin="demoniaccio"] body { background: radial-gradient(ellipse at top, rgba(120, 10, 30, .35), rgba(6, 3, 5, .8)); }
+  @keyframes fade { from { opacity: 0; } }
+  .desks { display: flex; justify-content: center; gap: 14px; padding: 22px 0 6px; }
+  .desk { width: 150px; height: 84px; border-radius: 10px; background: rgba(255,255,255,.08); border: 2px solid transparent; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 13px; transition: transform .12s; }
+  .desk:hover { transform: translateY(-2px); background: rgba(255,255,255,.14); }
+  .desk.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 25%, transparent); }
+  .desk.add { font-size: 26px; font-weight: 300; width: 84px; }
+  .search { align-self: center; margin: 16px 0 8px; width: 360px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.1); border-radius: 10px; padding: 7px 12px; color: #fff; }
+  .search .ico { width: 16px; height: 16px; opacity: .7; }
+  .search input { all: unset; flex: 1; font-size: 14px; color: #fff; }
+  .search input::placeholder { color: rgba(255,255,255,.5); }
+  #grid { flex: 1; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 26px; padding: 20px 60px 60px; overflow: auto; }
+  .win { width: 300px; display: flex; flex-direction: column; align-items: center; gap: 8px; animation: pop .22s cubic-bezier(.2,.8,.2,1) both; }
+  .win .shot { width: 300px; height: 190px; border-radius: 10px; background: rgba(255,255,255,.07) center/contain no-repeat; box-shadow: 0 10px 30px rgba(0,0,0,.45); position: relative; transition: transform .14s, box-shadow .14s; display: flex; align-items: center; justify-content: center; }
+  .win:hover .shot, .win.sel .shot { transform: scale(1.04); box-shadow: 0 0 0 3px var(--accent), 0 14px 36px rgba(0,0,0,.5); }
+  .win .shot img.big { width: 64px; height: 64px; opacity: .85; }
+  .win .meta { display: flex; align-items: center; gap: 7px; color: #fff; font-size: 12.5px; max-width: 300px; }
+  .win .meta img { width: 18px; height: 18px; }
+  .win .meta span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .win .meta .app { font-weight: 600; flex: none; }
+  .win .meta .ttl { opacity: .7; }
+  .win .x { position: absolute; top: -8px; left: -8px; width: 24px; height: 24px; border-radius: 50%; background: #2c2c30; color: #fff; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+  .win .x .ico { width: 12px; height: 12px; }
+  .win:hover .x { display: flex; }
+  .empty { color: rgba(255,255,255,.7); font-size: 15px; }
+  .hint { position: fixed; bottom: 18px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,.5); font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="desks" id="desks"></div>
+<div class="search"><span class="ico" id="sico"></span><input id="q" data-i18n-ph="mc.filter" spellcheck="false"></div>
+<div id="grid"></div>
+<div class="hint" data-i18n="mc.hint"></div>
+<script src="icons.js"></script>
+<script src="common.js"></script>
+<script src="mission.js"></script>
+</body>
+</html>

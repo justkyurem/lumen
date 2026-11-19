@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'">
+<link rel="stylesheet" href="base.css">
+<style>
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  :root { --w-bg: rgba(255,255,255,.62); }
+  [data-dark="true"] { --w-bg: rgba(30,30,34,.62); }
+  .w { position: absolute; width: 270px; padding: 16px 18px; border-radius: 22px; background: var(--w-bg); border: 1px solid var(--stroke);
+    box-shadow: 0 0 0 .5px var(--edge), 0 12px 32px rgba(0,0,0,.16); transition: box-shadow .15s, transform .15s; }
+  .w.dragging { box-shadow: 0 0 0 2px var(--accent), 0 20px 50px rgba(0,0,0,.25); transform: scale(1.02); z-index: 10; }
+  .w h4 { font-size: 11.5px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .w h4 a { text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .w h4 a:hover { color: var(--accent); }
+
+  /* Orologio */
+  .clock .time { font: 200 64px/1 var(--font-display); letter-spacing: -2px; font-variant-numeric: tabular-nums; }
+  .clock .date { margin-top: 8px; font-size: 15px; color: var(--muted); text-transform: capitalize; }
+
+  /* Meteo */
+  .weather .now { display: flex; align-items: center; gap: 12px; }
+  .weather .now svg { width: 52px; height: 52px; flex: none; }
+  .weather .temp { font: 300 46px/1 var(--font-display); }
+  .weather .desc { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .weather .days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 14px; text-align: center; font-size: 11.5px; }
+  .weather .days svg { width: 22px; height: 22px; margin: 4px auto; display: block; }
+  .weather .days .lo { color: var(--muted); }
+  .weather .msg { color: var(--muted); font-size: 13px; padding: 6px 0; }
+  .weather input { all: unset; margin-top: 8px; width: 100%; box-sizing: border-box; background: var(--field); border-radius: 8px; padding: 7px 10px; font-size: 13px; }
+
+  /* Calendario */
+  .cal .month { display: flex; justify-content: space-between; align-items: center; font-weight: 650; font-size: 14px; margin-bottom: 8px; text-transform: capitalize; }
+  .cal .month button { all: unset; width: 22px; height: 22px; text-align: center; border-radius: 6px; color: var(--muted); }
+  .cal .month button:hover { background: var(--hover); color: var(--text); }
+  .cal .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 12px; }
+  .cal .grid .dn { color: var(--muted); font-size: 10.5px; font-weight: 600; padding-bottom: 4px; }
+  .cal .d { height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; position: relative; font-variant-numeric: tabular-nums; }
+  .cal .d:hover { background: var(--hover); }
+  .cal .d.out { color: var(--muted); opacity: .45; }
+  .cal .d.today { background: var(--accent); color: #fff; font-weight: 650; }
+  .cal .d.sel:not(.today) { box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .cal .d.ev::after { content: ""; position: absolute; bottom: 2px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+  .cal .d.today.ev::after { background: #fff; }
+  .cal .events { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+  .cal .ev-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 3px 0; }
+  .cal .ev-item i { width: 3px; height: 14px; border-radius: 2px; background: var(--accent); flex: none; }
+  .cal .ev-item span { flex: 1; }
+  .cal .ev-item button { all: unset; color: var(--muted); opacity: 0; font-size: 14px; }
+  .cal .ev-item:hover button { opacity: 1; }
+  .cal input { all: unset; width: 100%; box-sizing: border-box; font-size: 12.5px; padding: 6px 8px; margin-top: 4px; border-radius: 7px; background: var(--field); }
+  .cal .none { color: var(--muted); font-size: 12px; }
+
+  /* Note */
+  .notes textarea { all: unset; width: 100%; min-height: 150px; font: 14px/1.5 var(--font); white-space: pre-wrap; display: block; user-select: text; cursor: text; }
+  .notes textarea::placeholder { color: var(--muted); }
+
+  /* Sistema */
+  .sys .m { margin-top: 10px; }
+  .sys .m:first-of-type { margin-top: 0; }
+  .sys .lab { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 5px; }
+  .sys .lab b { font-variant-numeric: tabular-nums; }
+  .sys .barx { height: 7px; border-radius: 4px; background: var(--field); overflow: hidden; }
+  .sys .barx i { display: block; height: 100%; border-radius: 4px; background: var(--accent); transition: width .6s ease; }
+  .sys .up { margin-top: 12px; font-size: 11.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="icons.js"></script>
+<script src="common.js"></script>
+<script src="widgets.js"></script>
+</body>
+</html>

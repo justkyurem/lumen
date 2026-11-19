@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: file:; style-src 'self' 'unsafe-inline'">
+<link rel="stylesheet" href="base.css">
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  body { padding: 14px 20px 26px; }
+  .panel { height: 100%; display: grid; grid-template-rows: 52px 1fr 36px; }
+  .bar { display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+  .bar .ico { width: 19px; height: 19px; color: var(--muted); }
+  #q { all: unset; flex: 1; font: 400 17px/1 var(--font-display); color: var(--text); caret-color: var(--accent); }
+  #q::placeholder { color: var(--muted); opacity: .7; }
+  .tabs { display: flex; background: var(--field); border-radius: 7px; padding: 2px; }
+  .tabs button { all: unset; padding: 4px 10px; border-radius: 5px; font-size: 12px; }
+  .tabs button.on { background: var(--glass-strong); box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 0 0 .5px var(--line); font-weight: 600; }
+  .main { display: grid; grid-template-columns: 300px 1fr; min-height: 0; }
+  #list { overflow-y: auto; padding: 6px; border-right: 1px solid var(--line); }
+  .it { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; height: 44px; }
+  .it.sel { background: var(--accent); color: #fff; }
+  .it.sel .meta { color: rgba(255,255,255,.75); }
+  .it .ico { width: 16px; height: 16px; opacity: .7; }
+  .it .body { flex: 1; min-width: 0; }
+  .it .txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+  .it .meta { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .it .pinmark { width: 14px; height: 14px; color: var(--accent); }
+  .it.sel .pinmark { color: #fff; }
+  #preview { padding: 16px; overflow: auto; min-width: 0; }
+  #preview pre { white-space: pre-wrap; word-break: break-word; font: 13px/1.5 "Cascadia Mono", Consolas, monospace; user-select: text; }
+  #preview img { max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 0 0 .5px var(--line); }
+  .empty { color: var(--muted); padding: 40px 20px; text-align: center; }
+  .foot { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted); }
+  .foot .keys { display: flex; gap: 14px; }
+  .foot a { color: var(--muted); }
+  .foot a:hover { color: #ff453a; }
+</style>
+</head>
+<body>
+<div class="panel pop" id="panel">
+  <div class="bar">
+    <span class="ico" id="sico"></span>
+    <input id="q" spellcheck="false" data-i18n-ph="clip.search">
+    <div class="tabs" id="tabs"><button data-f="all" class="on" data-i18n="clip.all"></button><button data-f="text" data-i18n="clip.text"></button><button data-f="image" data-i18n="clip.images"></button><button data-f="pinned" data-i18n="clip.pinned"></button></div>
+  </div>
+  <div class="main"><div id="list"></div><div id="preview"></div></div>
+  <div class="foot"><div class="keys" id="keys"></div><a id="clear" data-i18n="clip.clearAll"></a></div>
+</div>
+<script src="icons.js"></script>
+<script src="common.js"></script>
+<script src="clipboard.js"></script>
+</body>
+</html>

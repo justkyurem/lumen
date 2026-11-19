@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: file:; style-src 'self' 'unsafe-inline'">
+<link rel="stylesheet" href="base.css">
+<style>
+  html, body { overflow: hidden; }
+  body { padding: 10px 12px 14px; }
+  #box { display: inline-block; }
+  .panel { padding: 12px; }
+
+  /* Anteprime */
+  .previews { display: flex; gap: 10px; }
+  .pv { width: 200px; border-radius: 10px; padding: 6px; position: relative; }
+  .pv:hover { background: var(--hover); }
+  .pv .thumb { width: 188px; height: 118px; border-radius: 7px; background: var(--field) center/contain no-repeat; box-shadow: 0 0 0 .5px var(--line); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; }
+  .pv .title { margin-top: 6px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px; }
+  .pv .close { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border-radius: 50%; background: var(--glass-strong); box-shadow: 0 0 0 .5px var(--edge), 0 2px 6px rgba(0,0,0,.2); display: none; align-items: center; justify-content: center; }
+  .pv .close .ico { width: 12px; height: 12px; }
+  .pv:hover .close { display: flex; }
+
+  /* Pila cartella */
+  .stack-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 10px; gap: 20px; }
+  .stack-head b { font-size: 13px; }
+  .stack-head a { color: var(--accent); font-size: 12px; cursor: default; }
+  .grid { display: grid; grid-template-columns: repeat(4, 86px); gap: 4px; max-height: 330px; overflow-y: auto; }
+  .fi { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 4px; border-radius: 9px; }
+  .fi:hover { background: var(--hover); }
+  .fi img, .fi .ico { width: 36px; height: 36px; }
+  .fi .ico { color: var(--accent); }
+  .fi span { font-size: 11.5px; text-align: center; line-height: 1.25; max-width: 78px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+  .empty { color: var(--muted); padding: 20px; text-align: center; }
+</style>
+</head>
+<body>
+<div id="box"><div class="panel pop" id="panel"></div></div>
+<script src="icons.js"></script>
+<script src="common.js"></script>
+<script src="popover.js"></script>
+</body>
+</html>

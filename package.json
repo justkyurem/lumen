@@ -1,0 +1,71 @@
+{
+    "name":  "lumen-desk",
+    "productName":  "Lumen",
+    "version":  "2.1.0",
+    "description":  "Dock e barra dei menu in stile macOS per Windows, minimal e personalizzabili",
+    "main":  "src/main.js",
+    "scripts":  {
+                    "start":  "electron .",
+                    "dist":  "electron-builder --win",
+                    "release":  "electron-builder --win --publish always"
+                },
+    "build":  {
+                  "appId":  "app.lumen.desk",
+                  "productName":  "Lumen",
+                  "files":  [
+                                "src/**/*",
+                                "build/icon.png",
+                                "package.json"
+                            ],
+                  "directories":  {
+                                      "output":  "dist",
+                                      "buildResources":  "build"
+                                  },
+                  "win":  {
+                              "icon":  "build/icon.png",
+                              "target":  [
+                                             {
+                                                 "target":  "nsis",
+                                                 "arch":  [
+                                                              "x64"
+                                                          ]
+                                             },
+                                             {
+                                                 "target":  "portable",
+                                                 "arch":  [
+                                                              "x64"
+                                                          ]
+                                             }
+                                         ],
+                              "signAndEditExecutable":  true
+                          },
+                  "nsis":  {
+                               "oneClick":  false,
+                               "perMachine":  false,
+                               "allowToChangeInstallationDirectory":  true,
+                               "createDesktopShortcut":  true,
+                               "createStartMenuShortcut":  true,
+                               "shortcutName":  "Lumen",
+                               "artifactName":  "Lumen-Setup-${version}.${ext}"
+                           },
+                  "portable":  {
+                                   "artifactName":  "Lumen-Portable-${version}.${ext}"
+                               },
+                  "publish":  [
+                                  {
+                                      "provider":  "github",
+                                      "releaseType":  "release",
+                                      "owner":  "justkyurem",
+                                      "repo":  "lumen"
+                                  }
+                              ]
+              },
+    "license":  "MIT",
+    "devDependencies":  {
+                            "electron":  "^45.4.1",
+                            "electron-builder":  "^26.18.0"
+                        },
+    "dependencies":  {
+                         "electron-updater":  "^6.8.11"
+                     }
+}

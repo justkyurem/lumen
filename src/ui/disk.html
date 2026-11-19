@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'">
+<title>Analisi disco</title>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="form.css">
+<style>
+  body { display: grid; grid-template-columns: 210px 1fr; }
+  nav { padding: 50px 10px 16px; display: flex; flex-direction: column; gap: 1px; }
+  nav .brand { position: fixed; top: 13px; left: 18px; font-weight: 650; font-size: 13px; z-index: 60; }
+  nav button { all: unset; padding: 7px 10px; border-radius: 8px; display: flex; gap: 10px; align-items: center; font-size: 13px; }
+  nav button .ico { width: 16px; height: 16px; color: var(--accent); }
+  nav button:hover { background: var(--hover); }
+  nav button.active { background: var(--panel2); box-shadow: 0 0 0 .5px var(--line); font-weight: 600; }
+  nav .foot { margin-top: auto; font-size: 11.5px; color: var(--muted); padding: 10px; line-height: 1.4; }
+  nav .foot a { color: var(--accent); }
+  main { background: var(--bg); border-left: 1px solid var(--line); padding: 52px 30px 30px; overflow-y: auto; }
+  section { display: none; max-width: 760px; }
+  section.active { display: block; animation: in .2s ease-out; }
+  @keyframes in { from { opacity: 0; transform: translateY(4px); } }
+
+  .drive { padding: 14px 16px; display: grid; grid-template-columns: 40px 1fr auto; gap: 14px; align-items: center; }
+  .drive + .drive { border-top: 1px solid var(--line); }
+  .drive b { font-size: 16px; }
+  .meter { height: 12px; border-radius: 6px; background: var(--field); overflow: hidden; }
+  .meter i { display: block; height: 100%; border-radius: 6px; }
+  .big-num { font: 700 34px/1 var(--font-display); color: #30d158; }
+  .list .item { display: grid; grid-template-columns: 22px minmax(0, 1fr) 160px 90px auto; gap: 10px; align-items: center; padding: 8px 14px; min-height: 40px; }
+  .list .item + .item { border-top: 1px solid var(--line); }
+  .list .item:hover { background: var(--hover); }
+  .list .item .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .list .item .nm small { display: block; color: var(--muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
+  .list .item .bar { height: 8px; border-radius: 4px; background: var(--field); overflow: hidden; }
+  .list .item .bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; min-width: 2px; }
+  .list .item .sz { text-align: right; font-variant-numeric: tabular-nums; font-size: 12.5px; }
+  .list .item .ico { width: 16px; height: 16px; color: var(--muted); }
+  .list .item.dir .ico { color: var(--accent); }
+  .list .item.dir { cursor: default; }
+  .list .item .acts { display: flex; gap: 4px; }
+  .list .item input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; }
+  .mini { all: unset; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; background: var(--field); }
+  .mini:hover { background: var(--hover); }
+  .crumbs { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-bottom: 12px; font-size: 13px; }
+  .crumbs a { padding: 3px 7px; border-radius: 6px; }
+  .crumbs a:hover { background: var(--hover); }
+  .crumbs span { color: var(--muted); }
+  .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .toolbar .grow { flex: 1; }
+  .loading { padding: 30px; text-align: center; color: var(--muted); }
+  .spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent); animation: sp .8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .tag { font-size: 11px; padding: 2px 7px; border-radius: 6px; background: var(--field); color: var(--muted); margin-left: 6px; }
+  .tag.warn { color: #ff9f0a; }
+  .done { color: #30d158; }
+</style>
+</head>
+<body>
+<div class="drag"></div>
+<nav id="nav">
+  <div class="brand" data-i18n="disk.title"></div>
+  <button data-tab="over" class="active"><span class="ico" id="i1"></span><span data-i18n="disk.tabOver"></span></button>
+  <button data-tab="explore"><span class="ico" id="i2"></span><span data-i18n="disk.tabExplore"></span></button>
+  <button data-tab="big"><span class="ico" id="i3"></span><span data-i18n="disk.tabBig"></span></button>
+  <button data-tab="clean"><span class="ico" id="i4"></span><span data-i18n="disk.tabClean"></span></button>
+  <button data-tab="dev"><span class="ico" id="i5"></span><span data-i18n="disk.tabDev"></span></button>
+  <button data-tab="report"><span class="ico" id="i6"></span><span data-i18n="disk.tabReport"></span></button>
+  <div class="foot"><span data-i18n="disk.engine"></span><br><a id="classic" data-i18n="disk.classic"></a></div>
+</nav>
+<main>
+  <section id="over" class="active">
+    <h1 data-i18n="disk.tabOver"></h1><p class="sub" data-i18n="disk.overSub"></p>
+    <div class="group" id="drives"><div class="loading"><span class="spin"></span></div></div>
+    <div class="group"><div class="row"><span><span data-i18n="disk.recoverable"></span><span class="hint" data-i18n="disk.recoverableHint"></span></span><span class="big-num" id="recl">…</span></div>
+      <div class="row"><span class="hint" id="adminHint"></span><button class="btn primary" id="goClean" data-i18n="disk.goClean"></button></div></div>
+  </section>
+
+  <section id="explore">
+    <h1 data-i18n="disk.tabExplore"></h1><p class="sub" data-i18n="disk.exploreSub"></p>
+    <div class="toolbar"><div class="crumbs grow" id="crumbs"></div><button class="btn" id="exPick" data-i18n="disk.choose"></button><button class="btn" id="exOpen" data-i18n="disk.openExplorer"></button></div>
+    <div class="group list" id="exList"></div>
+  </section>
+
+  <section id="big">
+    <h1 data-i18n="disk.tabBig"></h1><p class="sub" data-i18n="disk.bigSub"></p>
+    <div class="toolbar"><span class="hint grow" id="bigPath"></span><button class="btn" id="bigPick" data-i18n="disk.choose"></button><button class="btn" id="bigScan" data-i18n="disk.scan"></button><button class="btn primary" id="bigTrash" data-i18n="disk.toTrash" disabled></button></div>
+    <div class="group list" id="bigList"><div class="row hint" data-i18n="disk.pressScan"></div></div>
+  </section>
+
+  <section id="clean">
+    <h1 data-i18n="disk.tabClean"></h1><p class="sub" data-i18n="disk.cleanSub"></p>
+    <div class="toolbar"><span class="hint grow" id="cleanTotal"></span><button class="btn" id="cleanAll" data-i18n="disk.selectAll"></button><button class="btn primary" id="cleanRun" data-i18n="disk.clean" disabled></button></div>
+    <div class="group list" id="cleanList"><div class="loading"><span class="spin"></span></div></div>
+    <p class="hint" id="cleanRes"></p>
+  </section>
+
+  <section id="dev">
+    <h1 data-i18n="disk.tabDev"></h1><p class="sub" data-i18n="disk.devSub"></p>
+    <div class="toolbar"><span class="hint grow" id="devPath"></span><button class="btn" id="devPick" data-i18n="disk.choose"></button><button class="btn" id="devScan" data-i18n="disk.scan"></button><button class="btn" id="devOld" data-i18n="disk.selectOld"></button><button class="btn primary" id="devRun" data-i18n="disk.delete" disabled></button></div>
+    <div class="group list" id="devList"><div class="row hint" data-i18n="disk.pressScan"></div></div>
+  </section>
+
+  <section id="report">
+    <h1 data-i18n="disk.tabReport"></h1><p class="sub" data-i18n="disk.reportSub"></p>
+    <div class="group"><div class="row"><span><span data-i18n="disk.reportFolder"></span><span class="hint" id="repPath"></span></span><div class="btns"><button class="btn" id="repPick" data-i18n="disk.choose"></button><button class="btn primary" id="repRun" data-i18n="disk.reportRun"></button></div></div>
+      <div class="row hint" id="repRes"></div></div>
+  </section>
+</main>
+<script src="icons.js"></script>
+<script src="common.js"></script>
+<script src="disk.js"></script>
+</body>
+</html>
