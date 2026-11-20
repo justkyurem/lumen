@@ -1,7 +1,7 @@
 {
     "name":  "lumen-desk",
     "productName":  "Lumen",
-    "version":  "2.2.1",
+    "version":  "2.2.2",
     "description":  "Dock e barra dei menu in stile macOS per Windows, minimal e personalizzabili",
     "main":  "src/main.js",
     "scripts":  {

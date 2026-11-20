@@ -82,6 +82,47 @@ class AppIndex {
     return scored.sort((a, b) => b[0] - a[0]).slice(0, limit).map(x => x[1]);
   }
 
+  // App dello Store e app di sistema rimpiazzate dallo Store (Calcolatrice, Blocco note): il loro .exe non ha
+  // un'icona utilizzabile, quindi la chiediamo a Windows tramite l'ID del pacchetto.
+  packagedId(exe, name) {
+    const m = exe && /\\WindowsApps\\([^_\\]+)_[^_\\]+_[^_\\]*_[^_\\]*_([^_\\]+)\\/i.exec(exe);
+    if (m) {
+      const fam = (m[1] + '_' + m[2]).toLowerCase() + '!';
+      const it = this.items.find(i => i.appId && i.appId.toLowerCase().startsWith(fam));
+      if (it) return it.appId;
+    }
+    if (name) {
+      const n = name.toLowerCase();
+      const it = this.items.find(i => i.appId && i.appId.includes('!') && i.name.toLowerCase() === n);
+      if (it) return it.appId;
+    }
+    return null;
+  }
+
+  async packagedIcon(appId) {
+    const key = 'aumid:' + appId;
+    if (this.icons.has(key)) return this.icons.get(key);
+    const r = await this.helper.safe('appIcons', { ids: [appId], size: 64 }, {}, 10000) || {};
+    this.icons.set(key, r[appId] || null);
+    return r[appId] || null;
+  }
+
+  async exeIcon(file) {
+    const key = 'exe:' + file;
+    if (this.icons.has(key)) return this.icons.get(key);
+    const r = await this.helper.safe('exeIcons', { paths: [file], size: 64 }, {}, 10000) || {};
+    this.icons.set(key, r[file] || null);
+    return r[file] || null;
+  }
+
+  // Icona migliore per un'app: quella del pacchetto se esiste, poi quella dentro il .exe, altrimenti quella di Windows
+  async bestIcon({ exe, name, src }) {
+    const id = this.packagedId(exe, name);
+    if (id) { const ic = await this.packagedIcon(id); if (ic) return ic; }
+    if (src && /\.exe$/i.test(src) && !/\\WindowsApps\\/i.test(src) && fs.existsSync(src)) { const ic = await this.exeIcon(src); if (ic) return ic; }
+    return this.icon(src);
+  }
+
   async icon(src, size = 'large') {
     if (!src) return null;
     const key = src + '|' + size;

@@ -323,6 +323,21 @@ namespace LumenIcons {
     static extern void SHCreateItemFromParsingName(string path, IntPtr pbc, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, [MarshalAs(UnmanagedType.Interface)] out IShellItemImageFactory f);
     [DllImport("gdi32.dll")] static extern int GetObject(IntPtr h, int c, ref BITMAP b);
     [DllImport("gdi32.dll")] static extern bool DeleteObject(IntPtr h);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern uint PrivateExtractIcons(string file, int idx, int cx, int cy, IntPtr[] icons, int[] ids, uint n, uint flags);
+    [DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr h);
+
+    // Icona letta dalle risorse del file .exe, senza passare dalla cache delle icone di Windows (che a volte è vecchia)
+    public static string FromExe(string file, int size) {
+      var h = new IntPtr[1]; var ids = new int[1];
+      uint n = PrivateExtractIcons(file, 0, size, size, h, ids, 1, 0);
+      if (n == 0 || n == 0xFFFFFFFF || h[0] == IntPtr.Zero) return null;
+      try {
+        using (var ic = Icon.FromHandle(h[0])) using (var bmp = ic.ToBitmap()) using (var ms = new MemoryStream()) {
+          bmp.Save(ms, ImageFormat.Png); return "data:image/png;base64," + Convert.ToBase64String(ms.ToArray());
+        }
+      } finally { DestroyIcon(h[0]); }
+    }
+
     public static string Get(string parsing, int size) {
       IShellItemImageFactory f = null; IntPtr hbm = IntPtr.Zero;
       try {
@@ -347,6 +362,12 @@ namespace LumenIcons {
   }
 }
 '@
+function Get-ExeIcons($paths, [int]$size) {
+  if (-not ('LumenIcons.Icons' -as [type])) { Add-Type -TypeDefinition $iconCs -ReferencedAssemblies System.Drawing }
+  $o = @{}
+  foreach ($p in $paths) { try { $r = [LumenIcons.Icons]::FromExe([string]$p, $size); if ($r) { $o[$p] = $r } } catch {} }
+  $o
+}
 function Get-AppIcons($ids, [int]$size) {
   if (-not ('LumenIcons.Icons' -as [type])) { Add-Type -TypeDefinition $iconCs -ReferencedAssemblies System.Drawing }
   $o = @{}
@@ -652,6 +673,7 @@ function Handle($cmd, $a) {
     'appBarBottom'{ , @([Lumen.Native]::AppBarBottom([long]$a.hwnd, $a.l, $a.t, $a.r, $a.b)) }
     'appBarRemove'{ foreach ($h in $a.hwnds) { [Lumen.Native]::AppBarRemove([long]$h) }; $true }
     'sleep'       { [Lumen.Native]::Sleep(); $true }
+    'exeIcons'    { Get-ExeIcons $a.paths ([int]$a.size) }
     'appIcons'    { Get-AppIcons $a.ids ([int]$a.size) }
     'startApps'   { , @(Get-StartApps | ForEach-Object { @{ name = $_.Name; id = $_.AppID } }) }
     'searchFiles' { Search-Files $a.q ([int]$a.n) }

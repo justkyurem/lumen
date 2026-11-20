@@ -106,6 +106,7 @@ dock.addEventListener('contextmenu', (e) => {
 
 window.lumen.on('running', (d) => { dstate = { ...dstate, ...d }; render(); });
 window.lumen.on('recycle', (n) => { dstate.recycle = n; render(); });
+window.lumen.on('dock-icons-changed', async () => { icons = await window.lumen.dockIcons(); render(); });
 
 App.init(async (s) => {
   S = s;

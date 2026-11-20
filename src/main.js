@@ -436,7 +436,7 @@ async function pollWindows() {
     const exe = path.basename(w.exe).toLowerCase();
     if (pinnedExes.has(exe) || seen.has(exe)) continue;
     seen.add(exe);
-    unpinned.push({ key: exe, exePath: w.exe, name: hostTitle(w) || await describe(w.exe), icon: await apps.icon(w.exe) });
+    unpinned.push({ key: exe, exePath: w.exe, name: hostTitle(w) || await describe(w.exe), icon: await apps.bestIcon({ exe: w.exe, src: w.exe }) });
   }
   const sig = running.join() + '|' + unpinned.map(u => u.key).join();
   if (sig === lastWinSig) return;
@@ -749,7 +749,9 @@ handle('i18n', () => I18N.dict(S.lang));
 handle('dock-icons', async () => {
   const out = {};
   for (const a of S.apps) {
-    out[a.id] = a.type === 'folder' ? null : await apps.icon(a.icon || a.iconSrc || (isUrlish(a.path) ? null : a.path));
+    if (a.type === 'folder') { out[a.id] = null; continue; }
+    const src = a.icon || a.iconSrc || (isUrlish(a.path) ? null : a.path);
+    out[a.id] = a.icon ? await apps.icon(a.icon) : await apps.bestIcon({ exe: a.path, name: a.name, src });
   }
   return out;
 });
@@ -1212,7 +1214,8 @@ app.whenReady().then(async () => {
   setInterval(() => { { const E = eff(); if (E.menubarShowStats || (E.widgetsEnabled && E.widgets.system.on)) sampleStats(); } }, 2000);
   setInterval(refreshWeather, 20 * 60000);
   setInterval(() => applyWallpaper(false), 5 * 60000);
-  setTimeout(() => apps.refresh(), 2500);
+  // Dopo il primo elenco delle app il dock può usare le icone dei pacchetti dello Store
+  setTimeout(() => apps.refresh().then(() => { lastWinSig = ''; send(W.dock, 'dock-icons-changed'); pollWindows(); }), 2500);
   setInterval(() => apps.refresh(), 15 * 60000);
 
   fast.ready.then(() => { pollWindows(); refreshRecycle(); applyWallpaper(false); });
@@ -1260,6 +1263,12 @@ async function runSnapshots(dir) {
     const tot = Math.round(m.reduce((s, p) => s + (p.memory.privateBytes || p.memory.workingSetSize), 0) / 1024);
     fs.appendFileSync(path.join(dir, 'memory.txt'), `== ${label}: ${tot} MB (privata)\n${rows.join('\n')}\n`);
   };
+  if (process.env.LUMEN_SNAP_ONLY === 'dockicons') {
+    await fast.ready; await wait(14000);
+    log('app=' + apps.items.length + ' non fissate=' + state.unpinned.map(u => u.name).join(', '));
+    await snap('dock', W.dock);
+    return app.quit();
+  }
   if (process.env.LUMEN_SNAP_ONLY === 'fullscreen') {
     await fast.ready; await wait(4000);
     const st = (label) => log(`${label}: fullscreen=${state.fullscreen} barVisibile=${[...W.bars.values()].map(w => w.isVisible()).join('/')} dockVisibile=${W.dock.isVisible()} app="${state.fg && state.fg.name}" area=${JSON.stringify(primary().workArea)}`);
