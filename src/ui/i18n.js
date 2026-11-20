@@ -161,7 +161,7 @@ const D = {
     'ob.dockTitle': 'Cosa vuoi nel Dock?', 'ob.dockLead': 'Abbiamo preselezionato le app più comuni che hai installato.', 'ob.appCount': '{n} app da aggiungere',
     'ob.keysTitle': 'Le scorciatoie da ricordare', 'ob.keysLead': 'Tutto il resto lo trovi nelle Impostazioni.',
     'ob.keyAltSpace': 'Alt + Spazio', 'ob.kSearch': 'Ricerca rapida: app, file, calcoli', 'ob.kClip': 'Cronologia appunti', 'ob.kSnap': 'Sistema la finestra attiva',
-    'ob.cornerKey': 'Angolo in basso a destra', 'ob.kCorner': 'Mostra il desktop', 'ob.clockKey': 'Clic sull\'orologio', 'ob.kControl': 'Centro di controllo',
+    'ob.cornerKey': 'Alt + A', 'ob.kCorner': 'Launchpad, tutte le app', 'ob.clockKey': 'Clic sull\'orologio', 'ob.kControl': 'Centro di controllo',
     'ob.back': 'Indietro', 'ob.next': 'Avanti', 'ob.start': 'Inizia',
   },
 
@@ -326,7 +326,7 @@ const D = {
     'ob.dockTitle': 'What goes in your Dock?', 'ob.dockLead': 'We preselected the most common apps you have installed.', 'ob.appCount': '{n} apps to add',
     'ob.keysTitle': 'Shortcuts worth remembering', 'ob.keysLead': 'Everything else is in Settings.',
     'ob.keyAltSpace': 'Alt + Space', 'ob.kSearch': 'Quick search: apps, files, math', 'ob.kClip': 'Clipboard history', 'ob.kSnap': 'Arrange the active window',
-    'ob.cornerKey': 'Bottom-right corner', 'ob.kCorner': 'Show the desktop', 'ob.clockKey': 'Click the clock', 'ob.kControl': 'Control Center',
+    'ob.cornerKey': 'Alt + A', 'ob.kCorner': 'Launchpad, all apps', 'ob.clockKey': 'Click the clock', 'ob.kControl': 'Control Center',
     'ob.back': 'Back', 'ob.next': 'Next', 'ob.start': 'Get started',
   },
 };

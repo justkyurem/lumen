@@ -478,7 +478,9 @@ function pollCorners() {
     if (hit) break;
   }
   if (hit !== corner.at) { corner.at = hit; corner.since = Date.now(); corner.fired = false; return; }
-  if (hit && !corner.fired && Date.now() - corner.since > 220) {
+  // Serve fermarsi nell'angolo per un attimo: passarci sopra per chiudere una finestra non deve aprire nulla.
+  // Sopra un'app a schermo intero (giochi, video) gli angoli non fanno niente.
+  if (hit && !corner.fired && Date.now() - corner.since > 450 && state.fullscreen == null) {
     corner.fired = true;
     (CORNER_ACTIONS[S.hotCorners[hit]] || CORNER_ACTIONS.none)();
   }

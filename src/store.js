@@ -59,7 +59,8 @@ const DEFAULTS = {
   clipboardMax: 100,
 
   // Angoli attivi: none | launcher | control | desktop | lock | widgets | clipboard | settings
-  hotCorners: { tl: 'none', tr: 'control', bl: 'none', br: 'desktop' },
+  // Spenti di serie: in alto a destra c'è la X delle finestre ingrandite, in basso a destra il Mostra desktop di Windows
+  hotCorners: { tl: 'none', tr: 'none', bl: 'none', br: 'none' },
 
   // Finestre
   snapEnabled: true,
