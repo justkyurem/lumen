@@ -95,12 +95,13 @@ function createDock() {
 }
 
 // Riserva lo spazio del dock come una barra di sistema: le finestre massimizzate si fermano sopra il dock
-let dockReserveBusy = false;
+let dockReserveBusy = false, dockReserveAgain = false;
 async function reserveDock() {
-  if (!alive(W.dock) || dockReserveBusy) return;
+  if (!alive(W.dock)) return;
+  if (dockReserveBusy) { dockReserveAgain = true; return; }
   dockReserveBusy = true;
   try {
-    const want = S.dockReserve && !eff().dockAutoHide;
+    const want = S.dockReserve && !eff().dockAutoHide && state.fullscreen !== primary().id;
     const h = hwndOf(W.dock);
     if (!want) {
       if (dockReservedH) { await fast.safe('appBarRemove', { hwnds: [h] }); dockReservedH = 0; }
@@ -116,6 +117,7 @@ async function reserveDock() {
       }
     }
   } finally { dockReserveBusy = false; }
+  if (dockReserveAgain) { dockReserveAgain = false; return reserveDock(); }
   setTimeout(() => { if (alive(W.dock)) W.dock.setBounds(dockBounds()); }, 400);
 }
 
@@ -149,7 +151,7 @@ function syncBars() {
 async function reserveAppBar(w, d) {
   if (!alive(w)) return;
   const h = hwndOf(w);
-  if (!S.menubarReserve || S.menubarAutoHide) return fast.safe('appBarRemove', { hwnds: [h] });
+  if (!S.menubarReserve || S.menubarAutoHide || state.fullscreen === d.id) return fast.safe('appBarRemove', { hwnds: [h] });
   const r = screen.dipToScreenRect(w, { x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: BAR_H });
   await fast.safe('appBar', { hwnd: h, l: r.x, t: r.y, r: r.x + r.width, b: r.y + r.height });
   if (alive(w)) w.setBounds({ x: d.bounds.x, y: d.bounds.y, width: d.bounds.width, height: BAR_H });
@@ -373,9 +375,22 @@ async function describe(exePath) {
   return d;
 }
 
+// Python, Java, Node e simili eseguono app di altri: il loro nome non dice nulla, il titolo della finestra sì
+const HOST_EXE = /^(python|pythonw|py|pyw|java|javaw|node|deno|bun|wscript|cscript|mshta|rundll32|autohotkey(64|32)?|love|lua|ruby|rubyw|perl)\.exe$/i;
+function hostTitle(w) {
+  if (!w || !w.exe || !HOST_EXE.test(path.basename(w.exe))) return null;
+  const t = (w.title || '').trim();
+  return t ? (t.length > 40 ? t.slice(0, 39) + '…' : t) : null;
+}
+
 async function pollForeground() {
   const fg = await fast.safe('foreground', {}, null, 1500);
-  if (!fg || fg.pid === process.pid) return;
+  if (!fg || fg.pid === process.pid) {
+    // L'app a schermo intero è stata chiusa e il primo piano non è passato a un'altra finestra: barra e dock tornano
+    if (state.fullscreen != null && !state.windows.some(w => w.hwnd === state.fullHwnd)) checkFullscreen({});
+    return;
+  }
+  fg.name = hostTitle(fg) || fg.name;
   const changed = !state.fg || fg.hwnd !== state.fg.hwnd || fg.name !== state.fg.name;
   state.fg = fg;
   if (changed) sendBars('active-app', { name: fg.name, exe: fg.exe });
@@ -386,15 +401,25 @@ async function pollForeground() {
 function checkFullscreen(fg) {
   let full = null;
   const isDesktop = /\\explorer\.exe$/i.test(fg.exe || '') && (!fg.title || fg.title === 'Program Manager');
-  if (!isDesktop && !fg.max && !fg.min && fg.w > 0) {
-    const r = screen.screenToDipRect(null, { x: fg.x, y: fg.y, width: fg.w, height: fg.h });
-    const d = screen.getDisplayMatching(r), b = d.bounds;
-    if (r.x <= b.x + 1 && r.y <= b.y + 1 && r.x + r.width >= b.x + b.width - 1 && r.y + r.height >= b.y + b.height - 1) full = d.id;
+  if (!isDesktop && fg.full && fg.w > 0) {
+    const c = screen.screenToDipPoint({ x: fg.x + Math.round(fg.w / 2), y: fg.y + Math.round(fg.h / 2) });
+    full = screen.getDisplayNearestPoint(c).id;
   }
-  if (full === state.fullscreen) return;
+  if (full === state.fullscreen) { if (full != null) state.fullHwnd = fg.hwnd; return; }
+  const was = state.fullscreen;
   state.fullscreen = full;
-  for (const [id, w] of W.bars) { if (!alive(w) || !S.showMenubar) continue; id === full ? w.hide() : w.showInactive(); }
-  if (alive(W.dock)) { full === primary().id ? W.dock.hide() : W.dock.showInactive(); }
+  state.fullHwnd = full != null ? fg.hwnd : null;
+  // Su quel monitor barra e dock spariscono e liberano lo spazio riservato; tornano quando l'app smette di essere in primo piano
+  for (const [id, w] of W.bars) {
+    if (!alive(w) || !S.showMenubar) continue;
+    const d = screen.getAllDisplays().find(x => x.id === id);
+    if (id === full) { w.hide(); releaseAppBar(w); }
+    else { w.showInactive(); if (id === was && d) reserveAppBar(w, d); }
+  }
+  if (alive(W.dock)) {
+    if (full === primary().id) { W.dock.hide(); reserveDock(); }
+    else { W.dock.showInactive(); if (was === primary().id) reserveDock(); }
+  }
 }
 
 let lastWinSig = '';
@@ -411,7 +436,7 @@ async function pollWindows() {
     const exe = path.basename(w.exe).toLowerCase();
     if (pinnedExes.has(exe) || seen.has(exe)) continue;
     seen.add(exe);
-    unpinned.push({ key: exe, exePath: w.exe, name: await describe(w.exe), icon: await apps.icon(w.exe) });
+    unpinned.push({ key: exe, exePath: w.exe, name: hostTitle(w) || await describe(w.exe), icon: await apps.icon(w.exe) });
   }
   const sig = running.join() + '|' + unpinned.map(u => u.key).join();
   if (sig === lastWinSig) return;
@@ -1216,7 +1241,7 @@ function ctx() {
   return {
     get S() { return S; }, patch, store, fast, slow, W, state, hooks, apps, t, send, sendBars, alive, overlay, lazy, centerOn,
     rememberForeground, confirmBox, hwndOf, launchPath, relayout, primary, BAR_H, UI, PRELOAD, openSettings, broadcast,
-    ensureBackup, restorePerf, mb, getJSON, windowsForExe, framedWindow,
+    ensureBackup, restorePerf, mb, getJSON, windowsForExe, framedWindow, hostTitle,
   };
 }
 
@@ -1235,6 +1260,20 @@ async function runSnapshots(dir) {
     const tot = Math.round(m.reduce((s, p) => s + (p.memory.privateBytes || p.memory.workingSetSize), 0) / 1024);
     fs.appendFileSync(path.join(dir, 'memory.txt'), `== ${label}: ${tot} MB (privata)\n${rows.join('\n')}\n`);
   };
+  if (process.env.LUMEN_SNAP_ONLY === 'fullscreen') {
+    await fast.ready; await wait(4000);
+    const st = (label) => log(`${label}: fullscreen=${state.fullscreen} barVisibile=${[...W.bars.values()].map(w => w.isVisible()).join('/')} dockVisibile=${W.dock.isVisible()} app="${state.fg && state.fg.name}" area=${JSON.stringify(primary().workArea)}`);
+    st('prima');
+    for (const mode of ['zoom', 'fs']) {
+      const py = require('child_process').spawn('python', [process.env.LUMEN_FS_PY, mode], { stdio: 'ignore' });
+      await wait(2500);
+      const pw = (await fast.safe('windows', { exclude: process.pid }, []) || []).find(x => x.title === 'DEMONIACCI-OS');
+      if (pw) await fast.safe('focus', { hwnd: pw.hwnd });
+      await wait(2000); st(mode + ' aperta');
+      await new Promise(r => py.on('exit', r)); await wait(2500); st(mode + ' chiusa');
+    }
+    return app.quit();
+  }
   if (process.env.LUMEN_SNAP_ONLY === 'launchpad') {
     await fast.ready; await wait(3000);
     const t0 = Date.now();

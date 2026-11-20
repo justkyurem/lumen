@@ -54,7 +54,7 @@ exports.install = (c) => {
     const thumbs = new Map(sources.map(s => [s.id, s.thumbnail.isEmpty() ? null : s.thumbnail.toDataURL()]));
     const items = [];
     for (const x of wins.slice(0, 24)) {
-      items.push({ hwnd: x.hwnd, title: x.title, min: x.min, app: await describe(x.exe), icon: await c.apps.icon(x.exe), thumb: thumbs.get(`window:${x.hwnd}:0`) || null });
+      items.push({ hwnd: x.hwnd, title: x.title, min: x.min, app: c.hostTitle(x) || await describe(x.exe), icon: await c.apps.icon(x.exe), thumb: thumbs.get(`window:${x.hwnd}:0`) || null });
     }
     const desktops = await fast.safe('desktops', {}, null);
     w.setBounds(d.bounds);

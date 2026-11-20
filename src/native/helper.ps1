@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Lumen {
-  public class WinInfo { public long hwnd; public int pid; public string title; public string exe; public int x, y, w, h; public bool min; public bool max; }
+  public class WinInfo { public long hwnd; public int pid; public string title; public string exe; public int x, y, w, h; public bool min; public bool max; public bool cap; public bool full; }
 
   [Guid("5CDF2C82-841E-4546-9722-0CF74078229A"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
   interface IAudioEndpointVolume {
@@ -97,7 +97,22 @@ namespace Lumen {
       var sb = new StringBuilder(GetWindowTextLength(h) + 1); GetWindowText(h, sb, sb.Capacity);
       RECT r; GetWindowRect(h, out r);
       return new WinInfo { hwnd = h.ToInt64(), pid = pid, title = sb.ToString(), exe = ExePath(pid),
-        x = r.L, y = r.T, w = r.R - r.L, h = r.B - r.T, min = IsIconic(h), max = IsZoomed(h) };
+        x = r.L, y = r.T, w = r.R - r.L, h = r.B - r.T, min = IsIconic(h), max = IsZoomed(h),
+        cap = (GetWindowLong(h, -16) & 0x00C00000) == 0x00C00000, full = IsFullscreen(h, r) };
+    }
+
+    // Schermo intero: la finestra copre tutto il suo monitor e non è una normale finestra ingrandita con la barra del titolo.
+    // Il confronto avviene qui, con le coordinate dello stesso processo, così non dipende dal ridimensionamento DPI.
+    static bool IsFullscreen(IntPtr h, RECT r) {
+      if (IsIconic(h)) return false;
+      var mi = new MONITORINFO(); mi.cbSize = Marshal.SizeOf(typeof(MONITORINFO));
+      if (!GetMonitorInfo(MonitorFromWindow(h, 2), ref mi)) return false;
+      var m = mi.rcMonitor;
+      bool covers = r.L <= m.L + 1 && r.T <= m.T + 1 && r.R >= m.R - 1 && r.B >= m.B - 1;
+      bool caption = (GetWindowLong(h, -16) & 0x00C00000) == 0x00C00000;
+      if (covers) return !(IsZoomed(h) && caption);
+      // App senza bordi ingrandite (giochi, shell in Python, kiosk): l'area di lavoro può escludere barra e dock riservati
+      return IsZoomed(h) && !caption;
     }
 
     static bool IsAppWindow(IntPtr h) {
